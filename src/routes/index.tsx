@@ -28,11 +28,11 @@ function autoCorrelate(buf: Float32Array, sr: number) {
   if (Math.sqrt(rms / buf.length) < 0.01) return -1;
   const n = buf.length;
   const c = new Float32Array(n);
-  for (let i = 0; i < n; i++) for (let j = 0; j < n - i; j++) c[i] += buf[j] * buf[j + i];
+  for (let i = 0; i < n; i++) for (let j = 0; j < n - i; j++) c[i]! += buf[j]! * buf[j + i]!;
   let d = 0;
-  while (d < n - 1 && c[d] > c[d + 1]) d++;
+  while (d < n - 1 && c[d]! > c[d + 1]!) d++;
   let max = -1, pos = -1;
-  for (let i = d; i < n; i++) if (c[i] > max) { max = c[i]; pos = i; }
+  for (let i = d; i < n; i++) if (c[i]! > max) { max = c[i]!; pos = i; }
   return pos > 0 ? sr / pos : -1;
 }
 
@@ -40,7 +40,7 @@ function Index() {
   const [active, setActive] = useState(false);
   const [cents, setCents] = useState(0);
   const [freq, setFreq] = useState<number | null>(null);
-  const [target, setTarget] = useState(STRINGS[0]);
+  const [target, setTarget] = useState(STRINGS[0]!);
   const [simulated, setSimulated] = useState(false);
   const stop = useRef<() => void>(() => {});
 
@@ -62,7 +62,7 @@ function Index() {
       if (t % 60 === 0) { idx = (idx + 1) % 6; drift = (Math.random() - 0.5) * 90; }
       drift *= 0.97;
       const c = drift + (Math.random() - 0.5) * 3;
-      update(STRINGS[idx].freq * Math.pow(2, c / 1200));
+      update(STRINGS[idx]!.freq * Math.pow(2, c / 1200));
     }, 60);
     stop.current = () => clearInterval(id);
   };
