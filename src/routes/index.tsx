@@ -202,10 +202,10 @@ function Index() {
             <circle cx="100" cy="100" r="5" fill={stroke} />
           </svg>
           <div className="pointer-events-none absolute inset-x-0 bottom-[16%] text-center">
-            <div className={`font-display text-5xl font-bold ${color}`}>
-              {freq ? target.name : "–"}<sub className="text-lg">{freq ? target.octave : ""}</sub>
+            <div className="font-display text-6xl font-bold text-foreground">
+              {freq ? target.name : "–"}{showOctave && <sub className="text-xl text-foreground/80">{freq ? target.octave : ""}</sub>}
             </div>
-            <div className="text-xs text-muted-foreground">{freq ? `${freq.toFixed(1)} Hz · ${cents > 0 ? "+" : ""}${cents.toFixed(0)}¢` : "—"}</div>
+            <div className="text-sm font-medium text-foreground/70">{freq ? `${freq.toFixed(1)} Hz · ${cents > 0 ? "+" : ""}${cents.toFixed(0)}¢` : "—"}</div>
           </div>
         </div>
 
