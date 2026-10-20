@@ -164,7 +164,7 @@ function Index() {
   const angle = freq ? (cents / 50) * 70 : 0;
 
   return (
-    <main className="mx-auto grid min-h-screen max-w-6xl gap-8 px-5 py-10 lg:grid-cols-[1fr_340px] lg:items-center">
+    <main className="mx-auto grid min-h-screen max-w-6xl gap-8 px-5 pb-10 pt-16 lg:grid-cols-[1fr_340px] lg:items-center lg:pt-10">
       <section className="flex flex-col items-center">
         <h1 className="text-4xl font-bold tracking-tight">
           String<span className="text-primary">Tune</span>
