@@ -5,21 +5,36 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "StringTune — Guitar Tuner" },
-      { name: "description", content: "A clean, beginner-friendly guitar tuner with a live dial." },
+      { name: "description", content: "A clean, beginner-friendly guitar tuner with a live dial and reference tones for popular tunings." },
       { property: "og:title", content: "StringTune — Guitar Tuner" },
-      { property: "og:description", content: "Tune your guitar with a clean live dial." },
+      { property: "og:description", content: "Tune your guitar with a clean live dial and reference tones." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Index,
 });
 
-const STRINGS = [
-  { name: "E", octave: 2, freq: 82.41 },
-  { name: "A", octave: 2, freq: 110.0 },
-  { name: "D", octave: 3, freq: 146.83 },
-  { name: "G", octave: 3, freq: 196.0 },
-  { name: "B", octave: 3, freq: 246.94 },
-  { name: "E", octave: 4, freq: 329.63 },
+const NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+const note = (midi: number) => ({
+  name: NAMES[midi % 12]!,
+  octave: Math.floor(midi / 12) - 1,
+  freq: 440 * Math.pow(2, (midi - 69) / 12),
+});
+
+type Tuning = { id: string; name: string; free: boolean; notes: number[] };
+const TUNINGS: Tuning[] = [
+  { id: "standard", name: "Standard", free: true, notes: [40, 45, 50, 55, 59, 64] },
+  { id: "dropd", name: "Drop D", free: true, notes: [38, 45, 50, 55, 59, 64] },
+  { id: "halfdown", name: "Half Step Down", free: false, notes: [39, 44, 49, 54, 58, 63] },
+  { id: "fulldown", name: "Full Step Down", free: false, notes: [38, 43, 48, 53, 57, 62] },
+  { id: "dropc", name: "Drop C", free: false, notes: [36, 43, 48, 53, 57, 62] },
+  { id: "dropb", name: "Drop B", free: false, notes: [35, 42, 47, 52, 56, 61] },
+  { id: "dadgad", name: "DADGAD", free: false, notes: [38, 45, 50, 55, 57, 62] },
+  { id: "openg", name: "Open G", free: false, notes: [38, 43, 50, 55, 59, 62] },
+  { id: "opend", name: "Open D", free: false, notes: [38, 45, 50, 54, 57, 62] },
+  { id: "opene", name: "Open E", free: false, notes: [40, 47, 52, 56, 59, 64] },
+  { id: "openc", name: "Open C", free: false, notes: [36, 43, 48, 55, 60, 64] },
 ];
 
 function autoCorrelate(buf: Float32Array, sr: number) {
@@ -36,20 +51,51 @@ function autoCorrelate(buf: Float32Array, sr: number) {
   return pos > 0 ? sr / pos : -1;
 }
 
+let toneCtx: AudioContext | null = null;
+function playTone(freq: number) {
+  toneCtx ??= new AudioContext();
+  const ctx = toneCtx;
+  const now = ctx.currentTime;
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0.0001, now);
+  master.gain.exponentialRampToValueAtTime(0.35, now + 0.01);
+  master.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
+  master.connect(ctx.destination);
+  [1, 2, 3, 4].forEach((h, i) => {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = i === 0 ? "triangle" : "sine";
+    o.frequency.value = freq * h;
+    g.gain.value = [1, 0.5, 0.25, 0.12][i]!;
+    o.connect(g).connect(master);
+    o.start(now);
+    o.stop(now + 2.6);
+  });
+}
+
 function Index() {
+  const [tuning, setTuning] = useState(TUNINGS[0]!);
+  const strings = tuning.notes.map(note);
+  const stringsRef = useRef(strings);
+  stringsRef.current = strings;
   const [active, setActive] = useState(false);
   const [cents, setCents] = useState(0);
   const [freq, setFreq] = useState<number | null>(null);
-  const [target, setTarget] = useState(STRINGS[0]!);
+  const [targetIdx, setTargetIdx] = useState(0);
   const [simulated, setSimulated] = useState(false);
+  const [locked, setLocked] = useState<Tuning | null>(null);
+  const [playing, setPlaying] = useState<number | null>(null);
   const stop = useRef<() => void>(() => {});
+  const target = strings[targetIdx]!;
 
   useEffect(() => () => stop.current(), []);
 
   const update = (f: number) => {
-    const t = STRINGS.reduce((a, b) => (Math.abs(Math.log2(f / b.freq)) < Math.abs(Math.log2(f / a.freq)) ? b : a));
-    const c = Math.max(-50, Math.min(50, 1200 * Math.log2(f / t.freq)));
-    setTarget(t);
+    const s = stringsRef.current;
+    let best = 0;
+    s.forEach((b, i) => { if (Math.abs(Math.log2(f / b.freq)) < Math.abs(Math.log2(f / s[best]!.freq))) best = i; });
+    const c = Math.max(-50, Math.min(50, 1200 * Math.log2(f / s[best]!.freq)));
+    setTargetIdx(best);
     setFreq(f);
     setCents((p) => p * 0.7 + c * 0.3);
   };
@@ -62,7 +108,7 @@ function Index() {
       if (t % 60 === 0) { idx = (idx + 1) % 6; drift = (Math.random() - 0.5) * 90; }
       drift *= 0.97;
       const c = drift + (Math.random() - 0.5) * 3;
-      update(STRINGS[idx]!.freq * Math.pow(2, c / 1200));
+      update(stringsRef.current[idx]!.freq * Math.pow(2, c / 1200));
     }, 60);
     stop.current = () => clearInterval(id);
   };
@@ -80,7 +126,7 @@ function Index() {
       const loop = () => {
         an.getFloatTimeDomainData(buf);
         const f = autoCorrelate(buf, ctx.sampleRate);
-        if (f > 60 && f < 1000) update(f);
+        if (f > 50 && f < 1000) update(f);
         raf = requestAnimationFrame(loop);
       };
       loop();
@@ -96,6 +142,19 @@ function Index() {
     else start();
   };
 
+  const choose = (t: Tuning) => {
+    if (!t.free) return setLocked(t);
+    setTuning(t);
+    setFreq(null);
+    setCents(0);
+  };
+
+  const listen = (i: number) => {
+    playTone(strings[i]!.freq);
+    setPlaying(i);
+    setTimeout(() => setPlaying((p) => (p === i ? null : p)), 1200);
+  };
+
   const status = !freq ? "idle" : Math.abs(cents) <= 5 ? "tune" : cents < 0 ? "low" : "high";
   const label = { idle: "Play a string", tune: "In Tune", low: "Too Low", high: "Too High" }[status];
   const color = { idle: "text-muted-foreground", tune: "text-success", low: "text-low", high: "text-high" }[status];
@@ -108,7 +167,18 @@ function Index() {
         <h1 className="text-4xl font-bold tracking-tight">
           String<span className="text-primary">Tune</span>
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">Standard tuning · E A D G B E</p>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {tuning.name} · {strings.map((s) => s.name).join(" ")}
+        </p>
+
+        <div className="mt-5 flex max-w-xl flex-wrap justify-center gap-2">
+          {TUNINGS.map((t) => (
+            <button key={t.id} onClick={() => choose(t)}
+              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${t.id === tuning.id ? "border-primary bg-primary text-primary-foreground" : t.free ? "text-foreground hover:border-primary" : "text-muted-foreground hover:border-primary"}`}>
+              {!t.free && "🔒 "}{t.name}
+            </button>
+          ))}
+        </div>
 
         <div className="relative mt-8 aspect-square w-full max-w-[380px]">
           <svg viewBox="0 0 200 200" className="h-full w-full">
@@ -146,11 +216,13 @@ function Index() {
         </button>
         {simulated && active && <p className="mt-3 text-xs text-muted-foreground">Microphone unavailable — showing a simulation.</p>}
 
-        <div className="mt-6 flex gap-2">
-          {STRINGS.map((s, i) => (
-            <div key={i} className={`grid h-10 w-10 place-items-center rounded-full border font-display text-sm ${freq && s === target ? "border-primary text-primary" : "text-muted-foreground"}`}>
-              {s.name}
-            </div>
+        <p className="mt-6 text-xs text-muted-foreground">Tap a string to hear its note</p>
+        <div className="mt-2 flex gap-2">
+          {strings.map((s, i) => (
+            <button key={i} onClick={() => listen(i)} aria-label={`Play ${s.name}${s.octave}`}
+              className={`grid h-12 w-12 place-items-center rounded-full border font-display text-sm transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent text-primary" : freq && i === targetIdx ? "border-primary text-primary" : "text-muted-foreground"}`}>
+              <span>{s.name}<sub className="text-[9px]">{s.octave}</sub></span>
+            </button>
           ))}
         </div>
       </section>
@@ -159,8 +231,9 @@ function Index() {
         <h2 className="text-xl font-bold">New to tuning?</h2>
         <ol className="mt-4 space-y-4 text-sm text-muted-foreground">
           {[
+            ["Pick a tuning", "Standard is the most common. Drop D is great for rock."],
+            ["Listen first", "Tap a string button to hear how it should sound."],
             ["Allow the mic", "Tap Start Microphone and allow access when your browser asks."],
-            ["Pluck one string", "Play a single open string and let it ring. Keep the room quiet."],
             ["Read the needle", "Left means Too Low, right means Too High. The center is perfect."],
             ["Turn the peg", "Too low? Tighten the peg. Too high? Loosen it. Small turns!"],
             ["Go green", "When the dial turns green, that string is In Tune. Move to the next."],
@@ -172,9 +245,25 @@ function Index() {
           ))}
         </ol>
         <p className="mt-6 rounded-xl bg-muted p-3 text-xs text-muted-foreground">
-          Tip: Strings from thickest to thinnest are <span className="text-foreground">E A D G B E</span> — "Eddie Ate Dynamite, Good Bye Eddie."
+          Tip: Standard strings from thickest to thinnest are <span className="text-foreground">E A D G B E</span> — "Eddie Ate Dynamite, Good Bye Eddie."
         </p>
       </aside>
+
+      {locked && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-5 backdrop-blur" onClick={() => setLocked(null)}>
+          <div className="w-full max-w-sm rounded-2xl border bg-card p-6 text-center" onClick={(e) => e.stopPropagation()}>
+            <div className="text-3xl">🔒</div>
+            <h3 className="mt-2 text-xl font-bold">{locked.name} is a Pro tuning</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Upgrade to StringTune Pro to unlock {TUNINGS.filter((t) => !t.free).length} extra tunings like Drop C, DADGAD and Open G.
+            </p>
+            <button disabled className="mt-5 w-full rounded-full bg-primary px-6 py-3 font-display font-bold text-primary-foreground opacity-60">
+              Subscriptions coming soon
+            </button>
+            <button onClick={() => setLocked(null)} className="mt-3 text-xs text-muted-foreground hover:text-foreground">Maybe later</button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
