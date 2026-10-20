@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { Switch } from "@/components/ui/switch";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -85,6 +86,7 @@ function Index() {
   const [simulated, setSimulated] = useState(false);
   const [locked, setLocked] = useState<Tuning | null>(null);
   const [playing, setPlaying] = useState<number | null>(null);
+  const [showOctave, setShowOctave] = useState(true);
   const stop = useRef<() => void>(() => {});
   const target = strings[targetIdx]!;
 
@@ -168,7 +170,7 @@ function Index() {
           String<span className="text-primary">Tune</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {tuning.name} · {strings.map((s) => s.name).join(" ")}
+          {tuning.name} · {strings.map((s) => (showOctave ? `${s.name}${s.octave}` : s.name)).join(" ")}
         </p>
 
         <div className="mt-5 flex max-w-xl flex-wrap justify-center gap-2">
@@ -201,10 +203,10 @@ function Index() {
             <circle cx="100" cy="100" r="5" fill={stroke} />
           </svg>
           <div className="pointer-events-none absolute inset-x-0 bottom-[16%] text-center">
-            <div className={`font-display text-5xl font-bold ${color}`}>
-              {freq ? target.name : "–"}<sub className="text-lg">{freq ? target.octave : ""}</sub>
+            <div className="font-display text-6xl font-bold text-foreground">
+              {freq ? target.name : "–"}{showOctave && <sub className="text-xl text-foreground/80">{freq ? target.octave : ""}</sub>}
             </div>
-            <div className="text-xs text-muted-foreground">{freq ? `${freq.toFixed(1)} Hz · ${cents > 0 ? "+" : ""}${cents.toFixed(0)}¢` : "—"}</div>
+            <div className="text-sm font-medium text-foreground/70">{freq ? `${freq.toFixed(1)} Hz · ${cents > 0 ? "+" : ""}${cents.toFixed(0)}¢` : "—"}</div>
           </div>
         </div>
 
@@ -220,10 +222,16 @@ function Index() {
         <div className="mt-2 flex gap-2">
           {strings.map((s, i) => (
             <button key={i} onClick={() => listen(i)} aria-label={`Play ${s.name}${s.octave}`}
-              className={`grid h-12 w-12 place-items-center rounded-full border font-display text-sm transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent text-primary" : freq && i === targetIdx ? "border-primary text-primary" : "text-muted-foreground"}`}>
-              <span>{s.name}<sub className="text-[9px]">{s.octave}</sub></span>
+              className={`grid h-12 w-12 place-items-center rounded-full border text-base transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent font-bold text-primary" : freq && i === targetIdx ? "border-primary font-semibold text-foreground" : "font-semibold text-foreground"}`}>
+              <span>{s.name}{showOctave && <sub className="text-[10px] font-normal text-foreground/70">{s.octave}</sub>}</span>
             </button>
           ))}
+        </div>
+
+        <div className="mt-5 flex items-center justify-center gap-3">
+          <Switch id="octave-toggle" checked={showOctave} onCheckedChange={setShowOctave} aria-label="Toggle octave numbers"
+            className="data-[state=unchecked]:bg-muted data-[state=unchecked]:border data-[state=unchecked]:border-border" />
+          <label htmlFor="octave-toggle" className="cursor-pointer select-none text-sm text-muted-foreground">Show octave numbers</label>
         </div>
       </section>
 
