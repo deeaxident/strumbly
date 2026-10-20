@@ -18,14 +18,40 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --color-success: var(--success);
   --color-low: var(--low);
   --color-high: var(--high);
 }
 
+/* Light is the default; .dark on <html> switches every token below. */
 :root {
   --radius: 1rem;
+  color-scheme: light;
+  --background: oklch(0.97 0.006 260);
+  --surface-glow: oklch(0.94 0.03 80);
+  --foreground: oklch(0.26 0.02 260);
+  --card: oklch(0.995 0.004 260);
+  --card-foreground: oklch(0.26 0.02 260);
+  --primary: oklch(0.62 0.16 50);
+  --primary-foreground: oklch(0.18 0.02 260);
+  --muted: oklch(0.93 0.012 260);
+  --muted-foreground: oklch(0.5 0.025 260);
+  --accent: oklch(0.91 0.04 80);
+  --border: oklch(0.26 0.02 260 / 14%);
+  --input: oklch(0.26 0.02 260 / 22%);
+  --ring: oklch(0.62 0.16 50);
+  --success: oklch(0.58 0.15 150);
+  --low: oklch(0.5 0.14 240);
+  --high: oklch(0.55 0.19 25);
+  --shadow-soft: 0 10px 30px -12px color-mix(in oklab, var(--foreground) 28%, transparent);
+}
+
+.dark {
+  color-scheme: dark;
   --background: oklch(0.16 0.01 260);
+  --surface-glow: oklch(0.22 0.02 260);
   --foreground: oklch(0.96 0.005 260);
   --card: oklch(0.21 0.012 260);
   --card-foreground: oklch(0.96 0.005 260);
@@ -35,18 +61,22 @@
   --muted-foreground: oklch(0.68 0.015 260);
   --accent: oklch(0.3 0.015 260);
   --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.72 0.17 50);
   --success: oklch(0.78 0.19 150);
   --low: oklch(0.7 0.15 240);
   --high: oklch(0.68 0.2 25);
+  --shadow-soft: 0 10px 30px -12px color-mix(in oklab, var(--foreground) 22%, transparent);
 }
 
 @layer base {
   * { border-color: var(--color-border); }
   body {
-    background: radial-gradient(ellipse at top, oklch(0.22 0.02 260), var(--background) 60%);
+    background: radial-gradient(ellipse at top, var(--surface-glow), var(--background) 60%);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     min-height: 100vh;
+    transition: background-color 0.25s ease, color 0.25s ease;
   }
   h1, h2, h3 { font-family: var(--font-display); }
 }
