@@ -169,7 +169,7 @@ function Index() {
           String<span className="text-primary">Tune</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {tuning.name} · {strings.map((s) => s.name).join(" ")}
+          {tuning.name} · {strings.map((s) => (showOctave ? `${s.name}${s.octave}` : s.name)).join(" ")}
         </p>
 
         <div className="mt-5 flex max-w-xl flex-wrap justify-center gap-2">
