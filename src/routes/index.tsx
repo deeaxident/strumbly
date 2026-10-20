@@ -229,7 +229,8 @@ function Index() {
         </div>
 
         <div className="mt-5 flex items-center justify-center gap-3">
-          <Switch id="octave-toggle" checked={showOctave} onCheckedChange={setShowOctave} aria-label="Toggle octave numbers" />
+          <Switch id="octave-toggle" checked={showOctave} onCheckedChange={setShowOctave} aria-label="Toggle octave numbers"
+            className="data-[state=unchecked]:bg-muted data-[state=unchecked]:border data-[state=unchecked]:border-border" />
           <label htmlFor="octave-toggle" className="cursor-pointer select-none text-sm text-muted-foreground">Show octave numbers</label>
         </div>
       </section>
