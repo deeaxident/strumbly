@@ -184,13 +184,37 @@ function Index() {
           {tuning.name} · {strings.map((s) => (showOctave ? `${s.name}${s.octave}` : s.name)).join(" ")}
         </p>
 
-        <div className="mt-5 flex max-w-xl flex-wrap justify-center gap-2">
-          {TUNINGS.map((t) => (
-            <button key={t.id} onClick={() => choose(t)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${t.id === tuning.id ? "border-primary bg-primary text-primary-foreground" : t.free ? "text-foreground hover:border-primary" : "text-muted-foreground hover:border-primary"}`}>
-              {!t.free && "🔒 "}{t.name}
-            </button>
-          ))}
+        <div className="mt-5 w-full max-w-[280px]">
+          <label htmlFor="tuning-select" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Tuning
+          </label>
+          <Select value={tuning.id} onValueChange={(id) => choose(TUNINGS.find((t) => t.id === id) ?? tuning)}>
+            <SelectTrigger id="tuning-select" className="h-11 w-full rounded-xl bg-card px-4 text-base font-medium data-[state=open]:border-primary">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-popover text-popover-foreground">
+              <SelectGroup>
+                <SelectLabel className="text-xs uppercase tracking-wide text-muted-foreground">Free</SelectLabel>
+                {TUNINGS.filter((t) => t.free).map((t) => (
+                  <SelectItem key={t.id} value={t.id} className="py-2 pl-3 text-base">
+                    {t.name}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+              <SelectSeparator />
+              <SelectGroup>
+                <SelectLabel className="text-xs uppercase tracking-wide text-muted-foreground">Pro</SelectLabel>
+                {TUNINGS.filter((t) => !t.free).map((t) => (
+                  <SelectItem key={t.id} value={t.id} className="py-2 pl-3 text-base">
+                    <span className="flex items-center gap-2">
+                      <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                      {t.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="relative mt-8 aspect-square w-full max-w-[380px]">
