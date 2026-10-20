@@ -8,3 +8,8 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Rules
+
+- Theme switching works by toggling a `.dark` class on `<html>`; every colour lives as a token in `src/styles.css` and components use semantic token classes only, so light and dark stay in sync without per-component branches.
+- Server-rendered SVG geometry must be rounded to a fixed number of decimals before it goes into JSX, because unrounded trig output differs in the last digits between runtimes and breaks hydration.
