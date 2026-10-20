@@ -85,6 +85,7 @@ function Index() {
   const [simulated, setSimulated] = useState(false);
   const [locked, setLocked] = useState<Tuning | null>(null);
   const [playing, setPlaying] = useState<number | null>(null);
+  const [showOctave, setShowOctave] = useState(true);
   const stop = useRef<() => void>(() => {});
   const target = strings[targetIdx]!;
 
