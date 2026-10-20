@@ -190,8 +190,10 @@ function Index() {
               const a = ((-70 + i * 5) * Math.PI) / 180;
               const major = i % 7 === 0;
               const r1 = major ? 70 : 76;
+              // Rounded so server and browser render byte-identical tick positions.
+              const px = (v: number) => v.toFixed(3);
               return (
-                <line key={i} x1={100 + Math.sin(a) * r1} y1={100 - Math.cos(a) * r1} x2={100 + Math.sin(a) * 82} y2={100 - Math.cos(a) * 82}
+                <line key={i} x1={px(100 + Math.sin(a) * r1)} y1={px(100 - Math.cos(a) * r1)} x2={px(100 + Math.sin(a) * 82)} y2={px(100 - Math.cos(a) * 82)}
                   stroke={i === 14 ? "var(--success)" : "var(--muted-foreground)"} strokeWidth={i === 14 ? 2 : major ? 1.4 : 0.7} strokeOpacity={i === 14 ? 1 : 0.6} />
               );
             })}
