@@ -221,10 +221,15 @@ function Index() {
         <div className="mt-2 flex gap-2">
           {strings.map((s, i) => (
             <button key={i} onClick={() => listen(i)} aria-label={`Play ${s.name}${s.octave}`}
-              className={`grid h-12 w-12 place-items-center rounded-full border font-display text-sm transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent text-primary" : freq && i === targetIdx ? "border-primary text-primary" : "text-muted-foreground"}`}>
-              <span>{s.name}<sub className="text-[9px]">{s.octave}</sub></span>
+              className={`grid h-12 w-12 place-items-center rounded-full border text-base transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent font-bold text-primary" : freq && i === targetIdx ? "border-primary font-semibold text-foreground" : "font-semibold text-foreground"}`}>
+              <span>{s.name}{showOctave && <sub className="text-[10px] font-normal text-foreground/70">{s.octave}</sub>}</span>
             </button>
           ))}
+        </div>
+
+        <div className="mt-5 flex items-center justify-center gap-3">
+          <Switch id="octave-toggle" checked={showOctave} onCheckedChange={setShowOctave} aria-label="Toggle octave numbers" />
+          <label htmlFor="octave-toggle" className="cursor-pointer select-none text-sm text-muted-foreground">Show octave numbers</label>
         </div>
       </section>
 
