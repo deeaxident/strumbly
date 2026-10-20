@@ -1,17 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Lock } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -188,33 +178,26 @@ function Index() {
           <label htmlFor="tuning-select" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Tuning
           </label>
-          <Select value={tuning.id} onValueChange={(id) => choose(TUNINGS.find((t) => t.id === id) ?? tuning)}>
-            <SelectTrigger id="tuning-select" className="h-11 w-full rounded-xl bg-card px-4 text-base font-medium data-[state=open]:border-primary">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-popover text-popover-foreground">
-              <SelectGroup>
-                <SelectLabel className="text-xs uppercase tracking-wide text-muted-foreground">Free</SelectLabel>
+          <div className="relative">
+            <select
+              id="tuning-select"
+              value={tuning.id}
+              onChange={(e) => choose(TUNINGS.find((t) => t.id === e.target.value) ?? tuning)}
+              className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-input bg-card px-4 pr-10 text-base font-medium text-foreground outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              <optgroup label="Free">
                 {TUNINGS.filter((t) => t.free).map((t) => (
-                  <SelectItem key={t.id} value={t.id} className="py-2 pl-3 text-base">
-                    {t.name}
-                  </SelectItem>
+                  <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
-              </SelectGroup>
-              <SelectSeparator />
-              <SelectGroup>
-                <SelectLabel className="text-xs uppercase tracking-wide text-muted-foreground">Pro</SelectLabel>
+              </optgroup>
+              <optgroup label="Pro">
                 {TUNINGS.filter((t) => !t.free).map((t) => (
-                  <SelectItem key={t.id} value={t.id} className="py-2 pl-3 text-base">
-                    <span className="flex items-center gap-2">
-                      <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                      {t.name}
-                    </span>
-                  </SelectItem>
+                  <option key={t.id} value={t.id}>🔒 {t.name}</option>
                 ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+              </optgroup>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          </div>
         </div>
 
         <div className="relative mt-8 aspect-square w-full max-w-[380px]">
