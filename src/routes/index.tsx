@@ -162,7 +162,7 @@ function Index() {
   const label = { idle: "Play a string", tune: "In Tune", low: "Too Low", high: "Too High" }[status];
   const color = { idle: "text-muted-foreground", tune: "text-success", low: "text-low", high: "text-high" }[status];
   const stroke = { idle: "var(--muted-foreground)", tune: "var(--success)", low: "var(--low)", high: "var(--high)" }[status];
-  const angle = freq ? (cents / 50) * 70 : 0;
+  const needleX = 200 + ((freq ? cents : 0) / 50) * 160;
 
   return (
     <main className="mx-auto grid min-h-screen max-w-6xl gap-8 px-5 pb-10 pt-16 lg:grid-cols-[1fr_340px] lg:items-center lg:pt-10">
@@ -201,34 +201,46 @@ function Index() {
         </div>
 
 
-        <div className="relative mt-8 aspect-square w-full max-w-[380px]">
-          <svg viewBox="0 0 200 200" className="h-full w-full">
-            <circle cx="100" cy="100" r="92" fill="var(--card)" stroke="var(--border)" strokeWidth="1" />
-            <circle cx="100" cy="100" r="92" fill="none" stroke={stroke} strokeOpacity={status === "tune" ? 0.6 : 0.15} strokeWidth="3" style={{ transition: "all .3s" }} />
-            {Array.from({ length: 29 }).map((_, i) => {
-              const a = ((-70 + i * 5) * Math.PI) / 180;
-              const major = i % 7 === 0;
-              const r1 = major ? 70 : 76;
-              // Rounded so server and browser render byte-identical tick positions.
-              const px = (v: number) => v.toFixed(3);
+        <div className="relative mt-8 w-full max-w-[560px]">
+          <svg viewBox="0 0 400 170" className="h-auto w-full">
+            {/* Panel */}
+            <rect x="1.5" y="1.5" width="397" height="167" rx="18" fill="var(--card)" stroke="var(--border)" strokeWidth="1" />
+            <rect x="1.5" y="1.5" width="397" height="167" rx="18" fill="none" stroke={stroke} strokeOpacity={status === "tune" ? 0.6 : 0.15} strokeWidth="2.5" style={{ transition: "all .3s" }} />
+            {/* Dial window */}
+            <rect x="24" y="20" width="352" height="62" rx="9" fill="var(--muted)" fillOpacity="0.45" />
+            {/* Scale ticks */}
+            {Array.from({ length: 21 }).map((_, i) => {
+              const x = (40 + i * 16).toFixed(3);
+              const major = i % 5 === 0;
+              const v = -50 + i * 5;
               return (
-                <line key={i} x1={px(100 + Math.sin(a) * r1)} y1={px(100 - Math.cos(a) * r1)} x2={px(100 + Math.sin(a) * 82)} y2={px(100 - Math.cos(a) * 82)}
-                  stroke={i === 14 ? "var(--success)" : "var(--muted-foreground)"} strokeWidth={i === 14 ? 2 : major ? 1.4 : 0.7} strokeOpacity={i === 14 ? 1 : 0.6} />
+                <g key={i}>
+                  <line x1={x} y1="28" x2={x} y2={major ? "48" : "41"}
+                    stroke={i === 10 ? "var(--success)" : "var(--muted-foreground)"} strokeWidth={i === 10 ? 2 : major ? 1.4 : 0.7} strokeOpacity={i === 10 ? 1 : 0.65} />
+                  {major && (
+                    <text x={x} y="74" textAnchor="middle" fontSize="10" fill={i === 10 ? "var(--success)" : "var(--muted-foreground)"}>
+                      {v > 0 ? `+${v}` : v}
+                    </text>
+                  )}
+                </g>
               );
             })}
-            <text x="38" y="150" fontSize="7" fill="var(--low)">♭ LOW</text>
-            <text x="140" y="150" fontSize="7" fill="var(--high)">HIGH ♯</text>
-            <g style={{ transform: `rotate(${angle}deg)`, transformOrigin: "100px 100px", transition: "transform .12s linear" }}>
-              <line x1="100" y1="108" x2="100" y2="26" stroke={stroke} strokeWidth="2.2" strokeLinecap="round" />
+            <text x="34" y="96" fontSize="9" fill="var(--low)">♭ LOW</text>
+            <text x="366" y="96" textAnchor="end" fontSize="9" fill="var(--high)">HIGH ♯</text>
+            {/* Sliding needle */}
+            <g style={{ transform: `translateX(${(needleX - 200).toFixed(3)}px)`, transition: "transform .12s linear" }}>
+              <polygon points="200,12 194,4 206,4" fill={stroke} />
+              <line x1="200" y1="12" x2="200" y2="88" stroke={stroke} strokeWidth="2.5" strokeLinecap="round" />
             </g>
-            <circle cx="100" cy="100" r="5" fill={stroke} />
+            {/* Note readout */}
+            <text x="200" y="136" textAnchor="middle" fontSize="38" fontWeight="700" fill="var(--foreground)" className="font-display">
+              {freq ? target.name : "–"}
+              {freq && showOctave && <tspan fontSize="18" fill="var(--foreground)" fillOpacity="0.75" dy="10">{target.octave}</tspan>}
+            </text>
+            <text x="200" y="160" textAnchor="middle" fontSize="11" fill="var(--foreground)" fillOpacity="0.7">
+              {freq ? `${freq.toFixed(1)} Hz · ${cents > 0 ? "+" : ""}${cents.toFixed(0)}¢` : "—"}
+            </text>
           </svg>
-          <div className="pointer-events-none absolute inset-x-0 bottom-[16%] text-center">
-            <div className="font-display text-6xl font-bold text-foreground">
-              {freq ? target.name : "–"}{showOctave && <sub className="text-xl text-foreground/80">{freq ? target.octave : ""}</sub>}
-            </div>
-            <div className="text-sm font-medium text-foreground/70">{freq ? `${freq.toFixed(1)} Hz · ${cents > 0 ? "+" : ""}${cents.toFixed(0)}¢` : "—"}</div>
-          </div>
         </div>
 
         <div className={`mt-4 font-display text-2xl font-bold ${color}`}>{label}</div>
