@@ -170,12 +170,9 @@ function Index() {
         <h1 className="text-4xl font-bold tracking-tight">
           Strum<span className="text-primary">bly</span>
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {tuning.name} · {strings.map((s) => (showOctave ? `${s.name}${s.octave}` : s.name)).join(" ")}
-        </p>
 
         <div className="mt-5 w-full max-w-[280px]">
-          <label htmlFor="tuning-select" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <label htmlFor="tuning-select" className="mb-1.5 block text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Tuning
           </label>
           <div className="relative">
@@ -198,7 +195,11 @@ function Index() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           </div>
+          <p className="mt-3 text-center font-display text-lg font-semibold tracking-[0.12em] text-foreground">
+            {strings.map((s) => (showOctave ? `${s.name}${s.octave}` : s.name)).join(" ")}
+          </p>
         </div>
+
 
         <div className="relative mt-8 aspect-square w-full max-w-[380px]">
           <svg viewBox="0 0 200 200" className="h-full w-full">
