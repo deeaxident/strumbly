@@ -5,9 +5,9 @@ import { Switch } from "@/components/ui/switch";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "StringTune — Guitar Tuner" },
+      { title: "Strumbly — Guitar Tuner" },
       { name: "description", content: "A clean, beginner-friendly guitar tuner with a live dial and reference tones for popular tunings." },
-      { property: "og:title", content: "StringTune — Guitar Tuner" },
+      { property: "og:title", content: "Strumbly — Guitar Tuner" },
       { property: "og:description", content: "Tune your guitar with a clean live dial and reference tones." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -167,7 +167,7 @@ function Index() {
     <main className="mx-auto grid min-h-screen max-w-6xl gap-8 px-5 pb-10 pt-16 lg:grid-cols-[1fr_340px] lg:items-center lg:pt-10">
       <section className="flex flex-col items-center">
         <h1 className="text-4xl font-bold tracking-tight">
-          String<span className="text-primary">Tune</span>
+          Strum<span className="text-primary">bly</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           {tuning.name} · {strings.map((s) => (showOctave ? `${s.name}${s.octave}` : s.name)).join(" ")}
@@ -265,7 +265,7 @@ function Index() {
             <div className="text-3xl">🔒</div>
             <h3 className="mt-2 text-xl font-bold">{locked.name} is a Pro tuning</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              Upgrade to StringTune Pro to unlock {TUNINGS.filter((t) => !t.free).length} extra tunings like Drop C, DADGAD and Open G.
+              Upgrade to Strumbly Pro to unlock {TUNINGS.filter((t) => !t.free).length} extra tunings like Drop C, DADGAD and Open G.
             </p>
             <button disabled className="mt-5 w-full rounded-full bg-primary px-6 py-3 font-display font-bold text-primary-foreground opacity-60">
               Subscriptions coming soon

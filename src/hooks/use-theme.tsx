@@ -2,14 +2,18 @@ import * as React from "react";
 
 export type Theme = "light" | "dark";
 
-export const THEME_STORAGE_KEY = "stringtune-theme";
+export const THEME_STORAGE_KEY = "strumbly-theme";
+// Saved under the app's previous name; still honoured so nobody loses their choice.
+const LEGACY_THEME_STORAGE_KEY = "stringtune-theme";
 
 /** Runs in <head> before paint so the page never flashes the wrong theme. */
-export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("${THEME_STORAGE_KEY}");if(t==="light"){document.documentElement.classList.remove("dark")}else{document.documentElement.classList.add("dark")}}catch(e){}})();`;
+export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("${THEME_STORAGE_KEY}")||localStorage.getItem("${LEGACY_THEME_STORAGE_KEY}");if(t==="light"){document.documentElement.classList.remove("dark")}else{document.documentElement.classList.add("dark")}}catch(e){}})();`;
 
 function readStoredTheme(): Theme {
   try {
-    const stored = window.localStorage.getItem(THEME_STORAGE_KEY);
+    const stored =
+      window.localStorage.getItem(THEME_STORAGE_KEY) ||
+      window.localStorage.getItem(LEGACY_THEME_STORAGE_KEY);
     if (stored === "light" || stored === "dark") return stored;
   } catch {
     // Storage can be blocked (private mode); fall back to the default.
