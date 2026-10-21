@@ -1,0 +1,4 @@
+- [ ] Verify rectangular radio-style tuner.
+- [ ] Replace tuning picker with name, notes, guitarist and genre details; remove duplicate note row and idle label.
+- [ ] Preserve raw time-domain microphone detection and make reference listening stop the microphone.
+- [ ] Verify microphone/listening interaction and dropdown on mobile and desktop.
