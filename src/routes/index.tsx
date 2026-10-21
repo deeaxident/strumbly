@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { TuningPicker } from "@/components/tuning-picker";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -39,6 +40,20 @@ const TUNINGS: Tuning[] = [
   { id: "openc", name: "Open C", free: false, notes: [36, 43, 48, 55, 60, 64] },
 ];
 
+const TUNING_EXAMPLES: Record<string, string> = {
+  standard: "Eric Clapton · Rock, blues, pop",
+  dropd: "Jimmy Page, Dave Grohl · Rock, alternative rock, metal",
+  halfdown: "Jimi Hendrix, Stevie Ray Vaughan · Blues, rock",
+  fulldown: "Tony Iommi · Metal, hard rock",
+  dropc: "James Hetfield, Daron Malakian · Metal, hard rock",
+  dropb: "Victor Griffin · Doom metal, hard rock",
+  dadgad: "Jimmy Page · Folk, acoustic, folk rock",
+  openg: "Keith Richards · Rock, blues",
+  opend: "Bob Dylan · Folk, blues",
+  opene: "Keith Richards · Blues, rock",
+  openc: "John Butler, Devin Townsend · Fingerstyle, progressive metal",
+};
+
 function autoCorrelate(buf: Float32Array, sr: number) {
   let rms = 0;
   for (const v of buf) rms += v * v;
@@ -75,7 +90,7 @@ function playTone(freq: number) {
   });
 }
 
-function Index() {
+export function Index() {
   const [tuning, setTuning] = useState(TUNINGS[0]!);
   const strings = tuning.notes.map(note);
   const stringsRef = useRef(strings);
@@ -89,9 +104,10 @@ function Index() {
   const [playing, setPlaying] = useState<number | null>(null);
   const [showOctave, setShowOctave] = useState(true);
   const stop = useRef<() => void>(() => {});
+  const microphoneSession = useRef(0);
   const target = strings[targetIdx]!;
 
-  useEffect(() => () => stop.current(), []);
+  useEffect(() => () => { microphoneSession.current++; stop.current(); }, []);
 
   const update = (f: number) => {
     const s = stringsRef.current;
@@ -117,9 +133,12 @@ function Index() {
   };
 
   const start = async () => {
+    const session = ++microphoneSession.current;
+    setPlaying(null);
     setActive(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (session !== microphoneSession.current) { stream.getTracks().forEach((track) => track.stop()); return; }
       const ctx = new AudioContext();
       const an = ctx.createAnalyser();
       an.fftSize = 2048;
@@ -136,12 +155,22 @@ function Index() {
       setSimulated(false);
       stop.current = () => { cancelAnimationFrame(raf); stream.getTracks().forEach((t) => t.stop()); ctx.close(); };
     } catch {
-      startSim();
+      if (session === microphoneSession.current) startSim();
     }
   };
 
+  const stopMicrophone = () => {
+    microphoneSession.current++;
+    stop.current();
+    stop.current = () => {};
+    setActive(false);
+    setSimulated(false);
+    setFreq(null);
+    setCents(0);
+  };
+
   const toggle = () => {
-    if (active) { stop.current(); setActive(false); setFreq(null); setCents(0); }
+    if (active) stopMicrophone();
     else start();
   };
 
@@ -153,6 +182,7 @@ function Index() {
   };
 
   const listen = (i: number) => {
+    stopMicrophone();
     playTone(strings[i]!.freq);
     setPlaying(i);
     setTimeout(() => setPlaying((p) => (p === i ? null : p)), 1200);
@@ -171,34 +201,7 @@ function Index() {
           Strum<span className="text-primary">bly</span>
         </h1>
 
-        <div className="mt-5 w-full max-w-[280px]">
-          <label htmlFor="tuning-select" className="mb-1.5 block text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Tuning
-          </label>
-          <div className="relative">
-            <select
-              id="tuning-select"
-              value={tuning.id}
-              onChange={(e) => choose(TUNINGS.find((t) => t.id === e.target.value) ?? tuning)}
-              className="h-11 w-full cursor-pointer appearance-none rounded-xl border border-input bg-card px-4 pr-10 text-base font-medium text-foreground outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/40"
-            >
-              <optgroup label="Free">
-                {TUNINGS.filter((t) => t.free).map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </optgroup>
-              <optgroup label="Pro">
-                {TUNINGS.filter((t) => !t.free).map((t) => (
-                  <option key={t.id} value={t.id}>🔒 {t.name}</option>
-                ))}
-              </optgroup>
-            </select>
-            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          </div>
-          <p className="mt-3 text-center font-display text-lg font-semibold tracking-[0.12em] text-foreground">
-            {strings.map((s) => (showOctave ? `${s.name}${s.octave}` : s.name)).join(" ")}
-          </p>
-        </div>
+        <TuningPicker tuning={tuning} tunings={TUNINGS} examples={TUNING_EXAMPLES} showOctave={showOctave} onChoose={choose} />
 
 
         <div className="relative mt-8 w-full max-w-[560px]">
@@ -243,21 +246,21 @@ function Index() {
           </svg>
         </div>
 
-        <div className={`mt-4 font-display text-2xl font-bold ${color}`}>{label}</div>
+        <div aria-live="polite" className={`mt-4 h-8 font-display text-2xl font-bold ${color}`}>{freq ? label : ""}</div>
 
-        <button onClick={toggle}
-          className={`mt-6 rounded-full px-8 py-3 font-display font-bold transition hover:scale-105 ${active ? "bg-muted text-foreground" : "bg-primary text-primary-foreground shadow-[0_0_40px_-8px_var(--primary)]"}`}>
+        <Button onClick={toggle}
+          className={`mt-6 h-auto rounded-full px-8 py-3 font-display font-bold transition hover:scale-105 ${active ? "bg-muted text-foreground" : "bg-primary text-primary-foreground shadow-[0_0_40px_-8px_var(--primary)]"}`}>
           {active ? "Stop Microphone" : "Start Microphone"}
-        </button>
+        </Button>
         {simulated && active && <p className="mt-3 text-xs text-muted-foreground">Microphone unavailable — showing a simulation.</p>}
 
         <p className="mt-6 text-xs text-muted-foreground">Tap a string to hear its note</p>
         <div className="mt-2 flex gap-2">
           {strings.map((s, i) => (
-            <button key={i} onClick={() => listen(i)} aria-label={`Play ${s.name}${s.octave}`}
-              className={`grid h-12 w-12 place-items-center rounded-full border text-base transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent font-bold text-primary" : freq && i === targetIdx ? "border-primary font-semibold text-foreground" : "font-semibold text-foreground"}`}>
+            <Button variant="ghost" key={i} onClick={() => listen(i)} aria-label={`Play ${s.name}${s.octave}`} aria-pressed={playing === i}
+              className={`grid h-12 w-12 place-items-center rounded-full border p-0 text-base transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent font-bold text-primary" : "font-semibold text-foreground"}`}>
               <span>{s.name}{showOctave && <sub className="text-[10px] font-normal text-foreground/70">{s.octave}</sub>}</span>
-            </button>
+            </Button>
           ))}
         </div>
 
