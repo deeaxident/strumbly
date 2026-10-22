@@ -213,8 +213,9 @@ export function Index() {
   return (
     <main className="mx-auto grid min-h-screen max-w-6xl gap-8 px-5 pb-10 pt-16 lg:grid-cols-[1fr_340px] lg:items-center lg:pt-10">
       <section className="flex flex-col items-center">
-        <h1 className="text-4xl font-bold tracking-tight">
+        <h1 className="text-center text-4xl font-bold tracking-tight">
           Strum<span className="text-primary">bly</span>
+          <span className="mt-1 block font-sans text-sm font-medium tracking-normal text-muted-foreground">Free Online Guitar Tuner</span>
         </h1>
 
         <TuningPicker tuning={tuning} tunings={TUNINGS} examples={TUNING_EXAMPLES} onChoose={choose} />
