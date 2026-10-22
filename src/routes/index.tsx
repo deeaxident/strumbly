@@ -9,12 +9,29 @@ export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
   head: () => ({
     meta: [
-      { title: "Strumbly — Guitar Tuner" },
-      { name: "description", content: "Tune your guitar with real-time microphone pitch detection, precise cents, and sampled acoustic guitar reference notes." },
-      { property: "og:title", content: "Strumbly — Guitar Tuner" },
-      { property: "og:description", content: "Real-time guitar pitch detection and sampled acoustic guitar notes for Standard, Drop D, and popular tunings." },
+      { title: "Strumbly — Free Online Guitar Tuner with Microphone" },
+      { name: "description", content: "Tune your guitar online for free with Strumbly. Real-time microphone pitch detection shows exact cents off, plus real acoustic guitar reference notes for Standard, Drop D, DADGAD, Open G and more tunings." },
+      { property: "og:title", content: "Strumbly — Free Online Guitar Tuner" },
+      { property: "og:description", content: "Free online guitar tuner with real-time microphone pitch detection and real acoustic guitar reference notes. Standard, Drop D, DADGAD, Open G and more." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://strumbly.io/" },
       { name: "twitter:card", content: "summary" },
+    ],
+    links: [{ rel: "canonical", href: "https://strumbly.io/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "Strumbly",
+          url: "https://strumbly.io/",
+          applicationCategory: "MultimediaApplication",
+          operatingSystem: "Any",
+          description: "Free online guitar tuner with real-time microphone pitch detection and acoustic guitar reference notes for Standard, Drop D, DADGAD, Open G and more tunings.",
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        }),
+      },
     ],
   }),
   component: Index,
