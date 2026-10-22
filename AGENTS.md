@@ -15,3 +15,5 @@
 - Server-rendered SVG geometry must be rounded to a fixed number of decimals before it goes into JSX, because unrounded trig output differs in the last digits between runtimes and breaks hydration.
 - The tuning picker uses an accessible button-based menu so multi-line note and artist details render consistently across desktop and mobile native-select limitations.
 - Microphone sessions use a generation guard to discard pending permissions after stopping; reference playback stops capture before producing audio to prevent self-detection.
+- Load Tone.js dynamically in the browser-only guitar playback module; use licensed CDN sample pointers and dispose playback on unmount to keep SSR audio-free.
+- Keep pitch analysis in a pure, reusable normalized autocorrelation detector with bounded downsampled lag search; clamp only needle position, never reported cents.
