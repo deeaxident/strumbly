@@ -5,7 +5,7 @@ vi.mock("tone", () => ({
   start: audio.start,
   Frequency: (midi: number) => ({ toNote: () => midi === 38 ? "D2" : "E2" }),
   Sampler: class {
-    constructor(options: Record<string, unknown>) { audio.options = options; queueMicrotask(() => (options.onload as () => void)()); }
+    constructor(options: Record<string, unknown>) { audio.options = options; queueMicrotask(() => (options["onload"] as () => void)()); }
     toDestination() { return this; }
     triggerAttackRelease = audio.attack;
     releaseAll = audio.release;
@@ -18,8 +18,8 @@ afterEach(() => { disposeGuitarAudio(); vi.clearAllMocks(); });
 
 it("maps all six recorded open strings into Tone.Sampler and plays MIDI notes", async () => {
   expect(await playGuitarNote(40, () => true)).toBe(true);
-  expect(Object.keys(audio.options?.urls ?? {})).toEqual(["E2", "A2", "D3", "G3", "B3", "E4"]);
-  for (const url of Object.values(audio.options?.urls ?? {})) expect(url).toMatch(/^\/__l5e\/assets-v1\//);
+  expect(Object.keys(audio.options?.["urls"] ?? {})).toEqual(["E2", "A2", "D3", "G3", "B3", "E4"]);
+  for (const url of Object.values(audio.options?.["urls"] ?? {})) expect(url).toMatch(/^\/__l5e\/assets-v1\//);
   expect(audio.attack).toHaveBeenCalledWith("E2", 2.5);
 });
 
