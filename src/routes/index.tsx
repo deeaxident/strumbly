@@ -140,7 +140,7 @@ export function Index() {
         an.getFloatTimeDomainData(buf);
         const f = detectPitch(buf);
         if (f !== null && f >= 50 && f <= 1000) { update(f); lastPitch = now; }
-        else if (now - lastPitch > 350) { setFreq(null); setCents(0); }
+        else if (now - lastPitch > 1800) { setFreq(null); setCents(0); }
       };
       stop.current = () => { cancelAnimationFrame(raf); microphone.getTracks().forEach((t) => t.stop()); source.disconnect(); an.disconnect(); void audioContext.close(); };
       await ctx.resume();

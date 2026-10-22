@@ -42,7 +42,7 @@ export function createPitchDetector(bufferSize: number, sampleRate: number) {
       samples[i] = value;
       energy += value * value;
     }
-    if (Math.sqrt(energy / size) < 0.008) return null;
+    if (Math.sqrt(energy / size) < 0.003) return null;
 
     let maximum = 0;
     for (let lag = minLag - 1; lag <= maxLag + 1; lag++) {
@@ -56,7 +56,7 @@ export function createPitchDetector(bufferSize: number, sampleRate: number) {
       correlation[lag] = value;
       if (value > maximum) maximum = value;
     }
-    if (maximum < 0.85) return null;
+    if (maximum < 0.75) return null;
     // Skip the zero-lag lobe, then take the first strong periodic peak, not a later multiple.
     let crossedZero = false;
     for (let lag = minLag; lag <= maxLag; lag++) {
