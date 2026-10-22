@@ -8,7 +8,7 @@ export function ThemeToggle() {
 
   const isDark = theme === "dark";
   const next = isDark ? "light" : "dark";
-  // The icon and word always show the mode this press will switch to.
+  // The icon always shows the mode this press will switch to.
   const Icon = isDark ? Sun : Moon;
   const label = `Switch to ${next} mode`;
 
@@ -21,8 +21,7 @@ export function ThemeToggle() {
         onClick={() => setTheme(next)}
         className={`${TOP_BUTTON_CLASS} text-foreground hover:border-primary/60 hover:text-primary active:scale-95`}
       >
-        <Icon className="h-4 w-4 shrink-0" aria-hidden />
-        <span>{next === "light" ? "Light" : "Dark"}</span>
+        <Icon className="h-4 w-4" aria-hidden />
       </button>
     </div>
   );
