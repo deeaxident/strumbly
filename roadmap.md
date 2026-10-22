@@ -8,3 +8,4 @@
 - [x] Test real microphone detection and sampled playback end-to-end.
 - [x] Add top-left heart donation link to the Stripe payment page.
 - [x] Remove the beginner side panel; make the help box centered at tuner width and collapsed until clicked.
+- [x] Move guitar sample credit into the help box; enlarge the microphone button to a rounded rectangle with tuner-matching spacing.
