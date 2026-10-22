@@ -16,19 +16,25 @@ export function TuningPicker({ tuning, tunings, examples, onChoose }: {
   const notes = (t: TuningOption) => t.notes.map((midi) => names[midi % 12] ?? "").join(" ");
   useEffect(() => {
     if (!open) return;
-    const outside = (e: PointerEvent) => {
+    // Safari may blur a clicked button with relatedTarget=null before click.
+    // Close only on an actual outside interaction, not an ambiguous blur.
+    const outside = (e: Event) => {
       if (e.target instanceof Node && !container.current?.contains(e.target)) setOpen(false);
     };
     document.addEventListener("pointerdown", outside);
+    document.addEventListener("focusin", outside);
     container.current?.querySelector<HTMLButtonElement>('[role="menuitemradio"][aria-checked="true"]')?.focus();
-    return () => document.removeEventListener("pointerdown", outside);
+    return () => {
+      document.removeEventListener("pointerdown", outside);
+      document.removeEventListener("focusin", outside);
+    };
   }, [open]);
 
   return (
     <div ref={container} className="relative mt-5 w-full max-w-[560px]">
       <div id="tuning-label" className="mb-1.5 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tuning</div>
-      <Button ref={trigger} variant="ghost" aria-labelledby="tuning-label tuning-current" aria-haspopup="menu" aria-expanded={open}
-        onClick={() => setOpen(!open)} className="h-auto min-h-12 w-full justify-between gap-3 rounded-lg border border-input bg-card px-4 py-3 text-foreground">
+      <Button ref={trigger} type="button" variant="ghost" aria-labelledby="tuning-label tuning-current" aria-haspopup="menu" aria-expanded={open}
+        onClick={() => setOpen((current) => !current)} className="h-auto min-h-12 w-full justify-between gap-3 rounded-lg border border-input bg-card px-4 py-3 text-foreground">
         <span id="tuning-current" className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-left">
           <span className="text-base font-semibold">{tuning.name}</span>
           <span className="font-sans text-base font-semibold text-primary">{notes(tuning)}</span>
@@ -37,7 +43,6 @@ export function TuningPicker({ tuning, tunings, examples, onChoose }: {
       </Button>
       {open && (
         <div role="menu" aria-labelledby="tuning-label" className="absolute inset-x-0 top-full z-30 mt-2 max-h-[min(420px,55vh)] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-[var(--shadow-soft)]"
-          onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget) && e.relatedTarget !== trigger.current) setOpen(false); }}
           onKeyDown={(e) => {
             if (e.key === "Escape") { setOpen(false); trigger.current?.focus(); }
             if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
@@ -49,7 +54,7 @@ export function TuningPicker({ tuning, tunings, examples, onChoose }: {
             }
           }}>
           {tunings.map((option) => (
-            <Button key={option.id} variant="ghost" role="menuitemradio" aria-checked={option.id === tuning.id}
+            <Button key={option.id} type="button" variant="ghost" role="menuitemradio" aria-checked={option.id === tuning.id}
               onClick={() => { setOpen(false); trigger.current?.focus(); onChoose(option); }}
               className="h-auto w-full justify-start whitespace-normal rounded-md px-3 py-3 text-left text-foreground focus:bg-accent">
               <span className="min-w-0 flex-1">
