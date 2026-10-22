@@ -6,14 +6,14 @@ type TuningOption = { id: string; name: string; free: boolean; notes: number[] }
 export type TuningExamples = Record<string, string>;
 const names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 
-export function TuningPicker({ tuning, tunings, examples, showOctave, onChoose }: {
+export function TuningPicker({ tuning, tunings, examples, onChoose }: {
   tuning: TuningOption; tunings: TuningOption[]; examples: TuningExamples;
-  showOctave: boolean; onChoose: (tuning: TuningOption) => void;
+  onChoose: (tuning: TuningOption) => void;
 }) {
   const [open, setOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const notes = (t: TuningOption) => t.notes.map((midi) => `${names[midi % 12] ?? ""}${showOctave ? Math.floor(midi / 12) - 1 : ""}`).join(" ");
+  const notes = (t: TuningOption) => t.notes.map((midi) => names[midi % 12] ?? "").join(" ");
   useEffect(() => {
     if (!open) return;
     const outside = (e: PointerEvent) => {
@@ -31,7 +31,7 @@ export function TuningPicker({ tuning, tunings, examples, showOctave, onChoose }
         onClick={() => setOpen(!open)} className="h-auto min-h-12 w-full justify-between gap-3 rounded-lg border border-input bg-card px-4 py-3 text-foreground">
         <span id="tuning-current" className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-left">
           <span className="text-base font-semibold">{tuning.name}</span>
-          <span className="font-display text-base text-primary">{notes(tuning)}</span>
+          <span className="font-sans text-base font-semibold text-primary">{notes(tuning)}</span>
         </span>
         <ChevronDown aria-hidden className="shrink-0" />
       </Button>
@@ -55,7 +55,7 @@ export function TuningPicker({ tuning, tunings, examples, showOctave, onChoose }
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="font-semibold">{option.name}</span>
-                  <span className="font-display text-primary">{notes(option)}</span>
+                  <span className="font-sans font-semibold text-primary">{notes(option)}</span>
                 </span>
                 <span className="mt-1 block text-xs font-normal leading-relaxed text-muted-foreground">{examples[option.id]}</span>
               </span>

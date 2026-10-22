@@ -39,7 +39,7 @@ it("does not automatically select reference buttons during microphone detection"
   render(<Index />);
   fireEvent.click(screen.getByRole("button", { name: "Start Microphone" }));
   await waitFor(() => expect(raw).toHaveBeenCalled());
-  for (const button of screen.getAllByRole("button", { name: /^Play [A-G]/ })) expect(button).toHaveAttribute("aria-pressed", "false");
+  for (const button of screen.getAllByRole("button", { name: /^Play string/ })) expect(button).toHaveAttribute("aria-pressed", "false");
 });
 
 it("stops microphone capture when a reference note is played", async () => {
@@ -47,20 +47,20 @@ it("stops microphone capture when a reference note is played", async () => {
   render(<Index />);
   fireEvent.click(screen.getByRole("button", { name: "Start Microphone" }));
   await waitFor(() => expect(raw).toHaveBeenCalled());
-  fireEvent.click(screen.getByRole("button", { name: "Play E2" }));
+  fireEvent.click(screen.getByRole("button", { name: "Play string 6: E" }));
   expect(stop).toHaveBeenCalledTimes(1);
   expect(screen.getByRole("button", { name: "Start Microphone" })).toBeEnabled();
-  expect(screen.getByRole("button", { name: "Play E2" })).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("button", { name: "Play string 6: E" })).toHaveAttribute("aria-pressed", "true");
 });
 
 it("discards a pending microphone request after a reference note is played", async () => {
   const { stop, stream, raw } = mockAudio();
-  let resolve: ((value: typeof stream) => void) | undefined;
-  vi.spyOn(navigator.mediaDevices, "getUserMedia").mockImplementation(() => new Promise((done) => { resolve = done as typeof resolve; }));
+  let resolve: (() => void) | undefined;
+  vi.mocked(navigator.mediaDevices.getUserMedia).mockImplementation(() => new Promise((done) => { resolve = () => done(stream as unknown as MediaStream); }));
   render(<Index />);
   fireEvent.click(screen.getByRole("button", { name: "Start Microphone" }));
-  fireEvent.click(screen.getByRole("button", { name: "Play A2" }));
-  resolve?.(stream);
+  fireEvent.click(screen.getByRole("button", { name: "Play string 5: A" }));
+  resolve?.();
   await waitFor(() => expect(stop).toHaveBeenCalledTimes(1));
   expect(raw).not.toHaveBeenCalled();
 });

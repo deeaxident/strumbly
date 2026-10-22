@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { TuningPicker } from "@/components/tuning-picker";
 
@@ -21,7 +20,6 @@ export const Route = createFileRoute("/")({
 const NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 const note = (midi: number) => ({
   name: NAMES[midi % 12]!,
-  octave: Math.floor(midi / 12) - 1,
   freq: 440 * Math.pow(2, (midi - 69) / 12),
 });
 
@@ -102,7 +100,6 @@ export function Index() {
   const [simulated, setSimulated] = useState(false);
   const [locked, setLocked] = useState<Tuning | null>(null);
   const [playing, setPlaying] = useState<number | null>(null);
-  const [showOctave, setShowOctave] = useState(true);
   const stop = useRef<() => void>(() => {});
   const microphoneSession = useRef(0);
   const target = strings[targetIdx]!;
@@ -201,7 +198,16 @@ export function Index() {
           Strum<span className="text-primary">bly</span>
         </h1>
 
-        <TuningPicker tuning={tuning} tunings={TUNINGS} examples={TUNING_EXAMPLES} showOctave={showOctave} onChoose={choose} />
+        <TuningPicker tuning={tuning} tunings={TUNINGS} examples={TUNING_EXAMPLES} onChoose={choose} />
+
+        <div className="mt-5 grid w-full max-w-[328px] grid-cols-6 gap-2" role="group" aria-label="Reference notes">
+          {strings.map((s, i) => (
+            <Button variant="ghost" key={i} onClick={() => listen(i)} aria-label={`Play string ${6 - i}: ${s.name}`} aria-pressed={playing === i}
+              className={`grid aspect-square h-auto w-full place-items-center rounded-full border p-0 font-sans text-base transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent font-bold text-primary" : "font-semibold text-foreground"}`}>
+              {s.name}
+            </Button>
+          ))}
+        </div>
 
 
         <div className="relative mt-8 w-full max-w-[560px]">
@@ -238,7 +244,6 @@ export function Index() {
             {/* Note readout */}
             <text x="200" y="136" textAnchor="middle" fontSize="38" fontWeight="700" fill="var(--foreground)" className="font-display">
               {freq ? target.name : "–"}
-              {freq && showOctave && <tspan fontSize="18" fill="var(--foreground)" fillOpacity="0.75" dy="10">{target.octave}</tspan>}
             </text>
             <text x="200" y="160" textAnchor="middle" fontSize="11" fill="var(--foreground)" fillOpacity="0.7">
               {freq ? `${freq.toFixed(1)} Hz · ${cents > 0 ? "+" : ""}${cents.toFixed(0)}¢` : "—"}
@@ -254,21 +259,6 @@ export function Index() {
         </Button>
         {simulated && active && <p className="mt-3 text-xs text-muted-foreground">Microphone unavailable — showing a simulation.</p>}
 
-        <p className="mt-6 text-xs text-muted-foreground">Tap a string to hear its note</p>
-        <div className="mt-2 flex gap-2">
-          {strings.map((s, i) => (
-            <Button variant="ghost" key={i} onClick={() => listen(i)} aria-label={`Play ${s.name}${s.octave}`} aria-pressed={playing === i}
-              className={`grid h-12 w-12 place-items-center rounded-full border p-0 text-base transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent font-bold text-primary" : "font-semibold text-foreground"}`}>
-              <span>{s.name}{showOctave && <sub className="text-[10px] font-normal text-foreground/70">{s.octave}</sub>}</span>
-            </Button>
-          ))}
-        </div>
-
-        <div className="mt-5 flex items-center justify-center gap-3">
-          <Switch id="octave-toggle" checked={showOctave} onCheckedChange={setShowOctave} aria-label="Toggle octave numbers"
-            className="data-[state=unchecked]:bg-muted data-[state=unchecked]:border data-[state=unchecked]:border-border" />
-          <label htmlFor="octave-toggle" className="cursor-pointer select-none text-sm text-muted-foreground">Show octave numbers</label>
-        </div>
       </section>
 
       <aside className="rounded-2xl border bg-card p-6">
