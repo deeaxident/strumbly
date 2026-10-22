@@ -3,6 +3,6 @@
 - [x] Replace tuning picker with name, notes, guitarist and genre details; remove duplicate note row and idle label.
 - [x] Preserve raw time-domain microphone detection and make reference listening stop the microphone.
 - [x] Verify microphone/listening interaction and dropdown on mobile and desktop.
-- [ ] Replace reference synthesis with licensed real guitar samples via Tone.Sampler.
-- [ ] Implement fast autocorrelation with nearest note, targeted string, and accurate signed cents.
-- [ ] Test real microphone detection and sampled playback end-to-end.
+- [x] Replace reference synthesis with licensed real guitar samples via Tone.Sampler.
+- [x] Implement fast autocorrelation with nearest note, targeted string, and accurate signed cents.
+- [x] Test real microphone detection and sampled playback end-to-end.

@@ -1,6 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { Index } from "@/routes/index";
+import { playGuitarNote } from "@/lib/guitar-audio";
+
+vi.mock("@/lib/guitar-audio", () => ({ playGuitarNote: vi.fn().mockResolvedValue(true), stopGuitarNote: vi.fn(), disposeGuitarAudio: vi.fn() }));
 
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); });
 
@@ -15,11 +18,12 @@ function mockAudio() {
   const gain = () => ({ gain: { setValueAtTime: vi.fn(), exponentialRampToValueAtTime: vi.fn(), value: 1 }, connect: vi.fn() });
   vi.stubGlobal("AudioContext", class {
     currentTime = 0; sampleRate = 44100; destination = {};
-    createAnalyser = () => ({ fftSize: 2048, getFloatTimeDomainData: raw, getFloatFrequencyData: bins });
-    createMediaStreamSource = () => ({ connect: vi.fn() });
+    createAnalyser = () => ({ fftSize: 4096, getFloatTimeDomainData: raw, getFloatFrequencyData: bins, disconnect: vi.fn() });
+    createMediaStreamSource = () => ({ connect: vi.fn(), disconnect: vi.fn() });
     createGain = gain;
     createOscillator = () => ({ frequency: { value: 0 }, connect: () => ({ connect: vi.fn() }), start: vi.fn(), stop: vi.fn() });
     close = vi.fn();
+    resume = vi.fn().mockResolvedValue(undefined);
   });
   vi.stubGlobal("requestAnimationFrame", vi.fn(() => 1));
   vi.stubGlobal("cancelAnimationFrame", vi.fn());
@@ -50,7 +54,7 @@ it("stops microphone capture when a reference note is played", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Play string 6: E" }));
   expect(stop).toHaveBeenCalledTimes(1);
   expect(screen.getByRole("button", { name: "Start Microphone" })).toBeEnabled();
-  expect(screen.getByRole("button", { name: "Play string 6: E" })).toHaveAttribute("aria-pressed", "true");
+  await waitFor(() => expect(playGuitarNote).toHaveBeenCalledWith(40, expect.any(Function)));
 });
 
 it("discards a pending microphone request after a reference note is played", async () => {
@@ -63,4 +67,13 @@ it("discards a pending microphone request after a reference note is played", asy
   resolve?.();
   await waitFor(() => expect(stop).toHaveBeenCalledTimes(1));
   expect(raw).not.toHaveBeenCalled();
+});
+
+it("reports denied microphone access without fabricating detected pitches", async () => {
+  mockAudio();
+  vi.mocked(navigator.mediaDevices.getUserMedia).mockRejectedValue(new DOMException("Permission denied", "NotAllowedError"));
+  render(<Index />);
+  fireEvent.click(screen.getByRole("button", { name: "Start Microphone" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Start Microphone" })).toBeEnabled());
+  expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
 });
