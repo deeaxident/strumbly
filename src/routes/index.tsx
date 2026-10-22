@@ -293,9 +293,9 @@ export function Index() {
       </section>
 
       <section className="mx-auto w-full max-w-[560px] rounded-2xl border bg-card">
-        <h2 className="text-xl font-bold">
+        <h2 className="text-base font-bold sm:text-xl">
           <button type="button" aria-expanded={helpOpen} aria-controls="tuning-guide" onClick={() => setHelpOpen((v) => !v)}
-            className="flex w-full items-center justify-between gap-3 px-6 py-5 text-left transition-colors hover:text-primary">
+            className="flex w-full items-center justify-between gap-3 whitespace-nowrap px-4 py-5 text-left transition-colors hover:text-primary sm:px-6">
             <span>How to tune your guitar online</span>
             <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
               className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${helpOpen ? "rotate-180" : ""}`}>
