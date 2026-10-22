@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { TuningPicker } from "./tuning-picker";
 
@@ -23,7 +23,7 @@ it("allows selection after Safari-style blur with a null relatedTarget", () => {
 
 it("closes when keyboard focus moves outside the picker", () => {
   setup();
-  screen.getByRole("button", { name: "Outside" }).focus();
+  act(() => screen.getByRole("button", { name: "Outside" }).focus());
   expect(screen.queryByRole("menu")).not.toBeInTheDocument();
 });
 
