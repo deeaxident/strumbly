@@ -72,6 +72,7 @@ export function Index() {
   const notesRef = useRef(tuning.notes);
   notesRef.current = tuning.notes;
   const [active, setActive] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [cents, setCents] = useState(0);
   const [freq, setFreq] = useState<number | null>(null);
   const [targetIdx, setTargetIdx] = useState(0);
@@ -211,8 +212,8 @@ export function Index() {
   const needleX = 200 + (Math.max(-50, Math.min(50, freq ? cents : 0)) / 50) * 160;
 
   return (
-    <main className="mx-auto grid min-h-screen max-w-6xl gap-8 px-5 pb-10 pt-16 lg:grid-cols-[1fr_340px] lg:items-center lg:pt-10">
-      <section className="flex flex-col items-center">
+    <main className="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center gap-8 px-5 pb-10 pt-16 lg:pt-10">
+      <section className="flex w-full flex-col items-center">
         <h1 className="text-center text-4xl font-bold tracking-tight">
           Strum<span className="text-primary">bly</span>
           <span className="mt-1 block font-sans text-sm font-medium tracking-normal text-muted-foreground">Free Online Guitar Tuner</span>
@@ -289,31 +290,19 @@ export function Index() {
 
       </section>
 
-      <aside className="rounded-2xl border bg-card p-6">
-        <h2 className="text-xl font-bold">New to tuning?</h2>
-        <ol className="mt-4 space-y-4 text-sm text-muted-foreground">
-          {[
-            ["Pick a tuning", "Standard is the most common. Drop D is great for rock."],
-            ["Listen first", "Tap a string button to hear how it should sound."],
-            ["Allow the mic", "Tap Start Microphone and allow access when your browser asks."],
-            ["Read the needle", "Left means Too Low, right means Too High. The center is perfect."],
-            ["Turn the peg", "Too low? Tighten the peg. Too high? Loosen it. Small turns!"],
-            ["Go green", "When the dial turns green, that string is In Tune. Move to the next."],
-          ].map(([t, d], i) => (
-            <li key={i} className="flex gap-3">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-accent font-display text-xs text-primary">{i + 1}</span>
-              <span><strong className="text-foreground">{t}.</strong> {d}</span>
-            </li>
-          ))}
-        </ol>
-        <p className="mt-6 rounded-xl bg-muted p-3 text-xs text-muted-foreground">
-          Tip: Standard strings from thickest to thinnest are <span className="text-foreground">E A D G B E</span> — "Eddie Ate Dynamite, Good Bye Eddie."
-        </p>
-      </aside>
-
-      <section className="lg:col-span-2 mx-auto w-full max-w-3xl rounded-2xl border bg-card p-6">
-        <h2 className="text-xl font-bold">How to tune your guitar online</h2>
-        <div className="mt-4 space-y-4 text-sm text-muted-foreground">
+      <section className="mx-auto w-full max-w-[560px] rounded-2xl border bg-card">
+        <h2 className="text-xl font-bold">
+          <button type="button" aria-expanded={helpOpen} aria-controls="tuning-guide" onClick={() => setHelpOpen((v) => !v)}
+            className="flex w-full items-center justify-between gap-3 px-6 py-5 text-left transition-colors hover:text-primary">
+            <span>How to tune your guitar online</span>
+            <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+              className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${helpOpen ? "rotate-180" : ""}`}>
+              <path d="M3 6l5 5 5-5" />
+            </svg>
+          </button>
+        </h2>
+        <div id="tuning-guide" hidden={!helpOpen} className={`px-6 pb-6 ${helpOpen ? "" : "hidden"}`}>
+          <div className="space-y-4 text-sm text-muted-foreground">
           <p>
             Strumbly is a free online guitar tuner that listens through your device's microphone. Play one string at a time and the
             needle shows exactly how many cents sharp or flat you are — no cables, no clip-on tuner, nothing to install.
@@ -329,6 +318,7 @@ export function Index() {
             Down, Full Step Down, Drop C, Drop B, DADGAD, Open G, Open D, Open E and Open C</strong> — each with the notes, famous
             guitarists, and genres that use it, so you can explore new sounds with confidence.
           </p>
+          </div>
         </div>
       </section>
 

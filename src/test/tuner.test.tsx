@@ -80,6 +80,16 @@ it("lets every tuning be chosen without a lock", async () => {
   ]);
 });
 
+it("keeps the tuning guide collapsed until the reader opens it", () => {
+  render(<Index />);
+  const toggle = screen.getByRole("button", { name: /How to tune your guitar online/ });
+  expect(toggle).toHaveAttribute("aria-expanded", "false");
+  expect(screen.queryByText(/free online guitar tuner that listens/)).not.toBeVisible();
+  fireEvent.click(toggle);
+  expect(toggle).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByText(/free online guitar tuner that listens/)).toBeVisible();
+});
+
 it("reports denied microphone access without fabricating detected pitches", async () => {
   mockAudio();
   vi.mocked(navigator.mediaDevices.getUserMedia).mockRejectedValue(new DOMException("Permission denied", "NotAllowedError"));
