@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { TuningPicker } from "@/components/tuning-picker";
 import { createPitchDetector, describePitch, noteFromMidi } from "@/lib/pitch";
-import { disposeGuitarAudio, playGuitarNote, stopGuitarNote } from "@/lib/guitar-audio";
+import { disposeGuitarAudio, playGuitarNote, preloadGuitarAudio, stopGuitarNote } from "@/lib/guitar-audio";
 
 export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
@@ -90,6 +90,16 @@ export function Index() {
   const playbackSession = useRef(0);
   const playbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const target = strings[targetIdx] ?? strings[0];
+
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(() => void preloadGuitarAudio(), { timeout: 1500 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(() => void preloadGuitarAudio(), 800);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => () => {
     microphoneSession.current++;
