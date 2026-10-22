@@ -228,7 +228,8 @@ export function Index() {
         <div className="mt-5 grid w-full max-w-[328px] grid-cols-6 gap-2" role="group" aria-label="Reference notes">
           {strings.map((s, i) => (
             <Button variant="ghost" key={i} onClick={() => void listen(i)} aria-label={`Play string ${6 - i}: ${s.name}`} aria-pressed={playing === i} aria-busy={loadingNote === i}
-              className={`grid h-12 w-full place-items-center rounded-2xl border border-input bg-card p-0 font-sans text-base transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent font-bold text-primary" : "font-semibold text-foreground"}`}>
+              data-detected={freq && targetIdx === i ? "true" : undefined}
+              className={`grid h-12 w-full place-items-center rounded-2xl border border-input bg-card p-0 font-sans text-base transition hover:border-primary hover:text-primary ${playing === i || (freq && targetIdx === i) ? "scale-110 border-primary bg-accent font-bold text-primary" : "font-semibold text-foreground"}`}>
               <span className={loadingNote === i ? "animate-pulse motion-reduce:animate-none" : ""}>{s.name}</span>
             </Button>
           ))}
@@ -259,8 +260,9 @@ export function Index() {
                 </g>
               );
             })}
-            <text x="34" y="96" fontSize="9" fill="var(--low)">♭ LOW</text>
-            <text x="366" y="96" textAnchor="end" fontSize="9" fill="var(--high)">HIGH ♯</text>
+            <text x="30" y="112" fontSize="15" fontWeight="700" fill="var(--low)" fillOpacity={status === "low" ? 1 : 0.4} style={{ transition: "fill-opacity .2s" }}>♭ LOW</text>
+            <text x="370" y="112" textAnchor="end" fontSize="15" fontWeight="700" fill="var(--high)" fillOpacity={status === "high" ? 1 : 0.4} style={{ transition: "fill-opacity .2s" }}>HIGH ♯</text>
+            {status === "tune" && <text x="200" y="104" textAnchor="middle" fontSize="11" fontWeight="700" fill="var(--success)" letterSpacing="2">IN TUNE</text>}
             {/* Sliding needle */}
             <g style={{ transform: `translateX(${(needleX - 200).toFixed(3)}px)`, transition: "transform .12s linear" }}>
               <polygon points="200,12 194,4 206,4" fill={stroke} />
@@ -282,9 +284,8 @@ export function Index() {
         </Button>
         {micError && <p role="alert" className="mt-3 max-w-sm text-center text-sm text-high">{micError}</p>}
         {audioError && <p role="alert" className="mt-3 max-w-sm text-center text-sm text-high">{audioError}</p>}
-        <div aria-live="polite" className={`text-center ${freq ? "mt-4 min-h-14" : ""}`}>
-          <div className={`font-display text-2xl font-bold ${color}`}>{freq ? label : ""}</div>
-          {freq && <p className="text-sm text-muted-foreground">Target: String {6 - targetIdx} · <span className="font-semibold text-foreground">{target?.name}</span></p>}
+        <div aria-live="polite" className={`sr-only ${color}`}>
+          {freq ? `${label}. String ${6 - targetIdx}, ${target?.name}` : ""}
         </div>
 
 
