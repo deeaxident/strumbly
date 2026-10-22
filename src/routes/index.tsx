@@ -224,7 +224,7 @@ export function Index() {
         <div className="mt-5 grid w-full max-w-[328px] grid-cols-6 gap-2" role="group" aria-label="Reference notes">
           {strings.map((s, i) => (
             <Button variant="ghost" key={i} onClick={() => void listen(i)} aria-label={`Play string ${6 - i}: ${s.name}`} aria-pressed={playing === i} aria-busy={loadingNote === i}
-              className={`grid aspect-square h-auto w-full place-items-center rounded-full border p-0 font-sans text-base transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent font-bold text-primary" : "font-semibold text-foreground"}`}>
+              className={`grid h-12 w-full place-items-center rounded-2xl border p-0 font-sans text-base transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent font-bold text-primary" : "font-semibold text-foreground"}`}>
               <span className={loadingNote === i ? "animate-pulse motion-reduce:animate-none" : ""}>{s.name}</span>
             </Button>
           ))}

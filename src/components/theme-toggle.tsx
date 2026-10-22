@@ -1,5 +1,6 @@
 import { Moon, Sun } from "lucide-react";
 
+import { TOP_BUTTON_CLASS } from "@/components/top-button";
 import { useTheme } from "@/hooks/use-theme";
 
 export function ThemeToggle() {
@@ -7,7 +8,7 @@ export function ThemeToggle() {
 
   const isDark = theme === "dark";
   const next = isDark ? "light" : "dark";
-  // The icon always shows the mode this press will switch to.
+  // The icon and word always show the mode this press will switch to.
   const Icon = isDark ? Sun : Moon;
   const label = `Switch to ${next} mode`;
 
@@ -18,9 +19,10 @@ export function ThemeToggle() {
         aria-label={label}
         title={label}
         onClick={() => setTheme(next)}
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/85 text-foreground shadow-[var(--shadow-soft)] backdrop-blur transition hover:border-primary/60 hover:text-primary active:scale-95"
+        className={`${TOP_BUTTON_CLASS} text-foreground hover:border-primary/60 hover:text-primary active:scale-95`}
       >
-        <Icon className="h-5 w-5" aria-hidden />
+        <Icon className="h-4 w-4 shrink-0" aria-hidden />
+        <span>{next === "light" ? "Light" : "Dark"}</span>
       </button>
     </div>
   );

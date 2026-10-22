@@ -1,5 +1,7 @@
 import { Heart } from "lucide-react";
 
+import { TOP_BUTTON_CLASS } from "@/components/top-button";
+
 const DONATE_URL = "https://buy.stripe.com/8x23co3ps4WscTjdD05ZC00";
 
 export function DonateLink() {
@@ -10,10 +12,10 @@ export function DonateLink() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Donate to Strumbly"
-        className="flex items-center gap-1.5 rounded-full border border-border bg-card/85 px-3 py-2 text-xs font-semibold text-muted-foreground shadow-[var(--shadow-soft)] backdrop-blur transition hover:text-foreground"
+        className={`${TOP_BUTTON_CLASS} text-muted-foreground hover:border-primary/60 hover:text-foreground`}
       >
-        <Heart className="h-3.5 w-3.5 fill-primary text-primary" aria-hidden />
-        <span className="hidden sm:inline">Donate</span>
+        <Heart className="h-4 w-4 shrink-0 fill-primary text-primary" aria-hidden />
+        <span>Donate</span>
       </a>
     </div>
   );

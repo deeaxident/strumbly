@@ -98,3 +98,13 @@ it("reports denied microphone access without fabricating detected pitches", asyn
   await waitFor(() => expect(screen.getByRole("button", { name: "Start Microphone" })).toBeEnabled());
   expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledWith({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
 });
+
+it("shows the reference notes as rounded rectangles, not circles", () => {
+  render(<Index />);
+  const notes = screen.getAllByRole("button", { name: /^Play string/ });
+  expect(notes).toHaveLength(6);
+  for (const note of notes) {
+    expect(note.className).toContain("rounded-2xl");
+    expect(note.className).not.toContain("rounded-full");
+  }
+});
