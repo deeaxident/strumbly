@@ -15,7 +15,11 @@ export const Route = createFileRoute("/")({
       { property: "og:description", content: "Simple and easy online guitar tuner with real-time microphone pitch detection and real acoustic guitar reference notes. Standard, Drop D, DADGAD, Open G and more." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://strumbly.io/" },
+      { property: "og:image", content: "https://strumbly.io/social-logo.png" },
+      { property: "og:image:width", content: "512" },
+      { property: "og:image:height", content: "512" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:image", content: "https://strumbly.io/social-logo.png" },
     ],
     links: [{ rel: "canonical", href: "https://strumbly.io/" }],
     scripts: [
