@@ -11,11 +11,11 @@ afterEach(() => {
 });
 
 describe("Theme toggle", () => {
-  it("defaults to dark and switches the page to light", () => {
+  it("defaults to dark and switches the page to light from a single button", () => {
     render(<ThemeToggle />);
     expect(document.documentElement.classList.contains("dark")).toBe(true);
 
-    fireEvent.click(screen.getByRole("button", { name: "Light mode" }));
+    fireEvent.click(screen.getByRole("button", { name: "Switch to light mode" }));
 
     expect(document.documentElement.classList.contains("dark")).toBe(false);
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe("light");
@@ -26,9 +26,20 @@ describe("Theme toggle", () => {
     render(<ThemeToggle />);
     expect(document.documentElement.classList.contains("dark")).toBe(false);
 
-    fireEvent.click(screen.getByRole("button", { name: "Dark mode" }));
+    fireEvent.click(screen.getByRole("button", { name: "Switch to dark mode" }));
 
     expect(document.documentElement.classList.contains("dark")).toBe(true);
     expect(localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark");
+  });
+
+  it("offers one control only, relabelled with the mode the press will switch to", () => {
+    render(<ThemeToggle />);
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Switch to light mode" })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Switch to light mode" }));
+
+    expect(screen.getAllByRole("button")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeTruthy();
   });
 });

@@ -1,45 +1,27 @@
 import { Moon, Sun } from "lucide-react";
 
-import { useTheme, type Theme } from "@/hooks/use-theme";
-import { cn } from "@/lib/utils";
-
-const OPTIONS = [
-  { id: "light", label: "Light", Icon: Sun },
-  { id: "dark", label: "Dark", Icon: Moon },
-] as const;
+import { useTheme } from "@/hooks/use-theme";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
+  const isDark = theme === "dark";
+  const next = isDark ? "light" : "dark";
+  // The icon always shows the mode this press will switch to.
+  const Icon = isDark ? Sun : Moon;
+  const label = `Switch to ${next} mode`;
+
   return (
     <div className="fixed right-4 top-4 z-40 sm:right-6 sm:top-6">
-      <div
-        role="group"
-        aria-label="Colour theme"
-        className="flex items-center gap-1 rounded-full border border-border bg-card/85 p-1 shadow-[var(--shadow-soft)] backdrop-blur"
+      <button
+        type="button"
+        aria-label={label}
+        title={label}
+        onClick={() => setTheme(next)}
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/85 text-foreground shadow-[var(--shadow-soft)] backdrop-blur transition hover:border-primary/60 hover:text-primary active:scale-95"
       >
-        {OPTIONS.map(({ id, label, Icon }) => {
-          const active = theme === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              aria-label={`${label} mode`}
-              aria-pressed={active}
-              onClick={() => setTheme(id as Theme)}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              <Icon className="h-3.5 w-3.5" aria-hidden />
-              <span className="hidden sm:inline">{label}</span>
-            </button>
-          );
-        })}
-      </div>
+        <Icon className="h-5 w-5" aria-hidden />
+      </button>
     </div>
   );
 }
