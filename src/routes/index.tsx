@@ -6,6 +6,7 @@ import { createPitchDetector, describePitch, noteFromMidi } from "@/lib/pitch";
 import { disposeGuitarAudio, playGuitarNote, stopGuitarNote } from "@/lib/guitar-audio";
 
 export const Route = createFileRoute("/")({
+  staticData: { sitemap: true },
   head: () => ({
     meta: [
       { title: "Strumbly — Guitar Tuner" },
