@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronDown, Lock } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-type TuningOption = { id: string; name: string; free: boolean; notes: number[] };
+type TuningOption = { id: string; name: string; notes: number[] };
 export type TuningExamples = Record<string, string>;
 const names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 
@@ -64,7 +64,7 @@ export function TuningPicker({ tuning, tunings, examples, onChoose }: {
                 </span>
                 <span className="mt-1 block text-xs font-normal leading-relaxed text-muted-foreground">{examples[option.id]}</span>
               </span>
-              {option.free ? option.id === tuning.id && <Check aria-hidden className="text-primary" /> : <Lock aria-label="Pro tuning" className="text-muted-foreground" />}
+              {option.id === tuning.id && <Check aria-hidden className="text-primary" />}
             </Button>
           ))}
         </div>

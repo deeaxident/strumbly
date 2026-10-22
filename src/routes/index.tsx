@@ -19,19 +19,19 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-type Tuning = { id: string; name: string; free: boolean; notes: number[] };
+type Tuning = { id: string; name: string; notes: number[] };
 const TUNINGS: Tuning[] = [
-  { id: "standard", name: "Standard", free: true, notes: [40, 45, 50, 55, 59, 64] },
-  { id: "dropd", name: "Drop D", free: true, notes: [38, 45, 50, 55, 59, 64] },
-  { id: "halfdown", name: "Half Step Down", free: false, notes: [39, 44, 49, 54, 58, 63] },
-  { id: "fulldown", name: "Full Step Down", free: false, notes: [38, 43, 48, 53, 57, 62] },
-  { id: "dropc", name: "Drop C", free: false, notes: [36, 43, 48, 53, 57, 62] },
-  { id: "dropb", name: "Drop B", free: false, notes: [35, 42, 47, 52, 56, 61] },
-  { id: "dadgad", name: "DADGAD", free: false, notes: [38, 45, 50, 55, 57, 62] },
-  { id: "openg", name: "Open G", free: false, notes: [38, 43, 50, 55, 59, 62] },
-  { id: "opend", name: "Open D", free: false, notes: [38, 45, 50, 54, 57, 62] },
-  { id: "opene", name: "Open E", free: false, notes: [40, 47, 52, 56, 59, 64] },
-  { id: "openc", name: "Open C", free: false, notes: [36, 43, 48, 55, 60, 64] },
+  { id: "standard", name: "Standard", notes: [40, 45, 50, 55, 59, 64] },
+  { id: "dropd", name: "Drop D", notes: [38, 45, 50, 55, 59, 64] },
+  { id: "halfdown", name: "Half Step Down", notes: [39, 44, 49, 54, 58, 63] },
+  { id: "fulldown", name: "Full Step Down", notes: [38, 43, 48, 53, 57, 62] },
+  { id: "dropc", name: "Drop C", notes: [36, 43, 48, 53, 57, 62] },
+  { id: "dropb", name: "Drop B", notes: [35, 42, 47, 52, 56, 61] },
+  { id: "dadgad", name: "DADGAD", notes: [38, 45, 50, 55, 57, 62] },
+  { id: "openg", name: "Open G", notes: [38, 43, 50, 55, 59, 62] },
+  { id: "opend", name: "Open D", notes: [38, 45, 50, 54, 57, 62] },
+  { id: "opene", name: "Open E", notes: [40, 47, 52, 56, 59, 64] },
+  { id: "openc", name: "Open C", notes: [36, 43, 48, 55, 60, 64] },
 ];
 
 const TUNING_EXAMPLES: Record<string, string> = {
@@ -49,7 +49,7 @@ const TUNING_EXAMPLES: Record<string, string> = {
 };
 
 export function Index() {
-  const [tuning, setTuning] = useState<Tuning>(TUNINGS[0] ?? { id: "standard", name: "Standard", free: true, notes: [40, 45, 50, 55, 59, 64] });
+  const [tuning, setTuning] = useState<Tuning>(TUNINGS[0] ?? { id: "standard", name: "Standard", notes: [40, 45, 50, 55, 59, 64] });
   const strings = tuning.notes.map(noteFromMidi);
   const notesRef = useRef(tuning.notes);
   notesRef.current = tuning.notes;
@@ -61,7 +61,6 @@ export function Index() {
   const [micError, setMicError] = useState<string | null>(null);
   const [audioError, setAudioError] = useState<string | null>(null);
   const [loadingNote, setLoadingNote] = useState<number | null>(null);
-  const [locked, setLocked] = useState<Tuning | null>(null);
   const [playing, setPlaying] = useState<number | null>(null);
   const stop = useRef<() => void>(() => {});
   const microphoneSession = useRef(0);
@@ -153,7 +152,6 @@ export function Index() {
   };
 
   const choose = (t: Tuning) => {
-    if (!t.free) return setLocked(t);
     playbackSession.current++;
     stopGuitarNote();
     setPlaying(null);
@@ -294,21 +292,6 @@ export function Index() {
         </p>
       </aside>
 
-      {locked && (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-background/80 p-5 backdrop-blur" onClick={() => setLocked(null)}>
-          <div className="w-full max-w-sm rounded-2xl border bg-card p-6 text-center" onClick={(e) => e.stopPropagation()}>
-            <div className="text-3xl">🔒</div>
-            <h3 className="mt-2 text-xl font-bold">{locked.name} is a Pro tuning</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Upgrade to Strumbly Pro to unlock {TUNINGS.filter((t) => !t.free).length} extra tunings like Drop C, DADGAD and Open G.
-            </p>
-            <button disabled className="mt-5 w-full rounded-full bg-primary px-6 py-3 font-display font-bold text-primary-foreground opacity-60">
-              Subscriptions coming soon
-            </button>
-            <button onClick={() => setLocked(null)} className="mt-3 text-xs text-muted-foreground hover:text-foreground">Maybe later</button>
-          </div>
-        </div>
-      )}
     </main>
   );
 }
