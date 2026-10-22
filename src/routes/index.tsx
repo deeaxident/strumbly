@@ -318,6 +318,7 @@ export function Index() {
             Down, Full Step Down, Drop C, Drop B, DADGAD, Open G, Open D, Open E and Open C</strong> — each with the notes, famous
             guitarists, and genres that use it, so you can explore new sounds with confidence.
           </p>
+          </div>
         </div>
       </section>
 
