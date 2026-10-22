@@ -12,10 +12,10 @@ export function DonateLink() {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Donate to Strumbly"
+        title="Donate to Strumbly"
         className={`${TOP_BUTTON_CLASS} text-muted-foreground hover:border-primary/60 hover:text-foreground`}
       >
-        <Heart className="h-4 w-4 shrink-0 fill-primary text-primary" aria-hidden />
-        <span>Donate</span>
+        <Heart className="h-4 w-4 fill-primary text-primary" aria-hidden />
       </a>
     </div>
   );
