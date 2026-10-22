@@ -5,8 +5,8 @@ import { TuningPicker } from "./tuning-picker";
 afterEach(cleanup);
 
 function setup() {
-  const standard = { id: "standard", name: "Standard", free: true, notes: [40, 45, 50, 55, 59, 64] };
-  const dropD = { id: "dropd", name: "Drop D", free: true, notes: [38, 45, 50, 55, 59, 64] };
+  const standard = { id: "standard", name: "Standard", notes: [40, 45, 50, 55, 59, 64] };
+  const dropD = { id: "dropd", name: "Drop D", notes: [38, 45, 50, 55, 59, 64] };
   const onChoose = vi.fn();
   render(<><TuningPicker tuning={standard} tunings={[standard, dropD]} examples={{}} onChoose={onChoose} /><button type="button">Outside</button></>);
   fireEvent.click(screen.getByRole("button", { name: /Tuning Standard/ }));
