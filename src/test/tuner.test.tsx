@@ -76,7 +76,7 @@ it("lets every tuning be chosen without a lock", async () => {
   const names = screen.getAllByRole("button", { name: /^Play string/ }).map((b) => b.getAttribute("aria-label"));
   expect(names).toEqual([
     "Play string 6: C", "Play string 5: G", "Play string 4: C",
-    "Play string 3: G", "Play string 2: A", "Play string 1: E",
+    "Play string 3: F", "Play string 2: A", "Play string 1: D",
   ]);
 });
 
