@@ -9,12 +9,29 @@ export const Route = createFileRoute("/")({
   staticData: { sitemap: true },
   head: () => ({
     meta: [
-      { title: "Strumbly — Guitar Tuner" },
-      { name: "description", content: "Tune your guitar with real-time microphone pitch detection, precise cents, and sampled acoustic guitar reference notes." },
-      { property: "og:title", content: "Strumbly — Guitar Tuner" },
-      { property: "og:description", content: "Real-time guitar pitch detection and sampled acoustic guitar notes for Standard, Drop D, and popular tunings." },
+      { title: "Strumbly — Free Online Guitar Tuner with Microphone" },
+      { name: "description", content: "Tune your guitar online for free with Strumbly. Real-time microphone pitch detection shows exact cents off, plus real acoustic guitar reference notes for Standard, Drop D, DADGAD, Open G and more tunings." },
+      { property: "og:title", content: "Strumbly — Free Online Guitar Tuner" },
+      { property: "og:description", content: "Free online guitar tuner with real-time microphone pitch detection and real acoustic guitar reference notes. Standard, Drop D, DADGAD, Open G and more." },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://strumbly.io/" },
       { name: "twitter:card", content: "summary" },
+    ],
+    links: [{ rel: "canonical", href: "https://strumbly.io/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          name: "Strumbly",
+          url: "https://strumbly.io/",
+          applicationCategory: "MultimediaApplication",
+          operatingSystem: "Any",
+          description: "Free online guitar tuner with real-time microphone pitch detection and acoustic guitar reference notes for Standard, Drop D, DADGAD, Open G and more tunings.",
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        }),
+      },
     ],
   }),
   component: Index,
@@ -196,8 +213,9 @@ export function Index() {
   return (
     <main className="mx-auto grid min-h-screen max-w-6xl gap-8 px-5 pb-10 pt-16 lg:grid-cols-[1fr_340px] lg:items-center lg:pt-10">
       <section className="flex flex-col items-center">
-        <h1 className="text-4xl font-bold tracking-tight">
+        <h1 className="text-center text-4xl font-bold tracking-tight">
           Strum<span className="text-primary">bly</span>
+          <span className="mt-1 block font-sans text-sm font-medium tracking-normal text-muted-foreground">Free Online Guitar Tuner</span>
         </h1>
 
         <TuningPicker tuning={tuning} tunings={TUNINGS} examples={TUNING_EXAMPLES} onChoose={choose} />
@@ -292,6 +310,27 @@ export function Index() {
           Tip: Standard strings from thickest to thinnest are <span className="text-foreground">E A D G B E</span> — "Eddie Ate Dynamite, Good Bye Eddie."
         </p>
       </aside>
+
+      <section className="lg:col-span-2 mx-auto w-full max-w-3xl rounded-2xl border bg-card p-6">
+        <h2 className="text-xl font-bold">How to tune your guitar online</h2>
+        <div className="mt-4 space-y-4 text-sm text-muted-foreground">
+          <p>
+            Strumbly is a free online guitar tuner that listens through your device's microphone. Play one string at a time and the
+            needle shows exactly how many cents sharp or flat you are — no cables, no clip-on tuner, nothing to install.
+          </p>
+          <p>
+            Start with <strong className="text-foreground">Standard tuning (E A D G B E)</strong>, the tuning used for most songs. If you
+            don't have a good ear yet, tap any string button above the tuner to hear a real acoustic guitar play that exact note, then
+            match your string to it. When you're ready, tap <strong className="text-foreground">Start Microphone</strong>, pluck a string,
+            and turn its tuning peg slowly until the needle centers and the tuner turns green.
+          </p>
+          <p>
+            Beyond Standard, Strumbly includes the most popular alternate tunings — <strong className="text-foreground">Drop D, Half Step
+            Down, Full Step Down, Drop C, Drop B, DADGAD, Open G, Open D, Open E and Open C</strong> — each with the notes, famous
+            guitarists, and genres that use it, so you can explore new sounds with confidence.
+          </p>
+        </div>
+      </section>
 
     </main>
   );
