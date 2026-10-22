@@ -301,7 +301,7 @@ export function Index() {
             </svg>
           </button>
         </h2>
-        <div id="tuning-guide" className={`px-6 pb-6 ${helpOpen ? "" : "hidden"}`}>
+        <div id="tuning-guide" hidden={!helpOpen} className={`px-6 pb-6 ${helpOpen ? "" : "hidden"}`}>
           <div className="space-y-4 text-sm text-muted-foreground">
           <p>
             Strumbly is a free online guitar tuner that listens through your device's microphone. Play one string at a time and the
