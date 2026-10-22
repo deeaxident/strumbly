@@ -272,21 +272,18 @@ export function Index() {
           </svg>
         </div>
 
+        <Button onClick={toggle}
+          className={`mt-8 h-auto rounded-3xl px-12 py-5 font-display text-xl font-bold transition hover:scale-105 ${active ? "bg-muted text-foreground" : "bg-primary text-primary-foreground shadow-[0_0_40px_-8px_var(--primary)]"}`}>
+          {active ? "Stop Microphone" : "Start Microphone"}
+        </Button>
+        {micError && <p role="alert" className="mt-3 max-w-sm text-center text-sm text-high">{micError}</p>}
+        {audioError && <p role="alert" className="mt-3 max-w-sm text-center text-sm text-high">{audioError}</p>}
         <div aria-live="polite" className="mt-4 min-h-14 text-center">
           <div className={`font-display text-2xl font-bold ${color}`}>{freq ? label : ""}</div>
           {freq && <p className="text-sm text-muted-foreground">Target: String {6 - targetIdx} · <span className="font-semibold text-foreground">{target?.name}</span></p>}
         </div>
 
-        <Button onClick={toggle}
-          className={`mt-6 h-auto rounded-full px-8 py-3 font-display font-bold transition hover:scale-105 ${active ? "bg-muted text-foreground" : "bg-primary text-primary-foreground shadow-[0_0_40px_-8px_var(--primary)]"}`}>
-          {active ? "Stop Microphone" : "Start Microphone"}
-        </Button>
-        {micError && <p role="alert" className="mt-3 max-w-sm text-center text-sm text-high">{micError}</p>}
-        {audioError && <p role="alert" className="mt-3 max-w-sm text-center text-sm text-high">{audioError}</p>}
-        <p className="mt-5 text-center text-xs text-muted-foreground">
-          Guitar samples: <a className="underline underline-offset-2 hover:text-foreground" href="https://github.com/nbrosowsky/tonejs-instruments" target="_blank" rel="noreferrer">Nicholas Brosowsky / Iowa</a>
-          {" · "}<a className="underline underline-offset-2 hover:text-foreground" href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noreferrer">CC BY 3.0</a>
-        </p>
+
 
       </section>
 
@@ -318,7 +315,12 @@ export function Index() {
             Down, Full Step Down, Drop C, Drop B, DADGAD, Open G, Open D, Open E and Open C</strong> — each with the notes, famous
             guitarists, and genres that use it, so you can explore new sounds with confidence.
           </p>
+          <p className="text-xs">
+            Guitar samples: <a className="underline underline-offset-2 hover:text-foreground" href="https://github.com/nbrosowsky/tonejs-instruments" target="_blank" rel="noreferrer">Nicholas Brosowsky / Iowa</a>
+            {" · "}<a className="underline underline-offset-2 hover:text-foreground" href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noreferrer">CC BY 3.0</a>
+          </p>
           </div>
+
         </div>
       </section>
 
