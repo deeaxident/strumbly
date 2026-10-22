@@ -278,7 +278,7 @@ export function Index() {
         </Button>
         {micError && <p role="alert" className="mt-3 max-w-sm text-center text-sm text-high">{micError}</p>}
         {audioError && <p role="alert" className="mt-3 max-w-sm text-center text-sm text-high">{audioError}</p>}
-        <div aria-live="polite" className="mt-4 min-h-14 text-center">
+        <div aria-live="polite" className={`text-center ${freq ? "mt-4 min-h-14" : ""}`}>
           <div className={`font-display text-2xl font-bold ${color}`}>{freq ? label : ""}</div>
           {freq && <p className="text-sm text-muted-foreground">Target: String {6 - targetIdx} · <span className="font-semibold text-foreground">{target?.name}</span></p>}
         </div>
