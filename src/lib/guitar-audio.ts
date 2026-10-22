@@ -10,11 +10,7 @@ let sampler: Sampler | null = null;
 let loading: Promise<Sampler> | null = null;
 let generation = 0;
 
-export async function playGuitarNote(midi: number, isCurrent: () => boolean) {
-  // No Tone.js runtime import during SSR: Web Audio is only created after a user gesture.
-  const Tone = await import("tone");
-  await Tone.start();
-  if (!isCurrent()) return false;
+function loadSampler(Tone: typeof import("tone")) {
   if (!loading) {
     const session = generation;
     loading = new Promise<Sampler>((resolve, reject) => {
@@ -31,8 +27,27 @@ export async function playGuitarNote(midi: number, isCurrent: () => boolean) {
       }).toDestination();
       sampler = instrument;
     });
+    loading.catch(() => {});
   }
-  const instrument = await loading;
+  return loading;
+}
+
+/** Background warm-up: fetch Tone.js and decode samples before the first tap (audio stays suspended until a gesture). */
+export async function preloadGuitarAudio() {
+  try {
+    const Tone = await import("tone");
+    await loadSampler(Tone);
+  } catch {
+    // Ignore; a tap will retry and surface the error.
+  }
+}
+
+export async function playGuitarNote(midi: number, isCurrent: () => boolean) {
+  // No Tone.js runtime import during SSR: Web Audio is only created after a user gesture.
+  const Tone = await import("tone");
+  await Tone.start();
+  if (!isCurrent()) return false;
+  const instrument = await loadSampler(Tone);
   if (!isCurrent()) return false;
   instrument.releaseAll();
   // Tone's MIDI conversion retains octave internally; the interface still shows plain note names.
