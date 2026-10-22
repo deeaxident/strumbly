@@ -69,6 +69,17 @@ it("discards a pending microphone request after a reference note is played", asy
   expect(raw).not.toHaveBeenCalled();
 });
 
+it("lets every tuning be chosen without a lock", async () => {
+  render(<Index />);
+  fireEvent.click(screen.getByRole("button", { name: /^Tuning Standard/ }));
+  fireEvent.click(screen.getByRole("menuitemradio", { name: /Drop C/ }));
+  const names = screen.getAllByRole("button", { name: /^Play string/ }).map((b) => b.getAttribute("aria-label"));
+  expect(names).toEqual([
+    "Play string 6: C", "Play string 5: G", "Play string 4: C",
+    "Play string 3: G", "Play string 2: A", "Play string 1: E",
+  ]);
+});
+
 it("reports denied microphone access without fabricating detected pitches", async () => {
   mockAudio();
   vi.mocked(navigator.mediaDevices.getUserMedia).mockRejectedValue(new DOMException("Permission denied", "NotAllowedError"));
