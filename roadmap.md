@@ -7,3 +7,4 @@
 - [x] Implement fast autocorrelation with nearest note, targeted string, and accurate signed cents.
 - [x] Test real microphone detection and sampled playback end-to-end.
 - [x] Add top-left heart donation link to the Stripe payment page.
+- [x] Remove the beginner side panel; make the help box centered at tuner width and collapsed until clicked.
