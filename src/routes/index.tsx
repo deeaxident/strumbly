@@ -2,25 +2,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { TuningPicker } from "@/components/tuning-picker";
+import { createPitchDetector, describePitch, noteFromMidi } from "@/lib/pitch";
+import { disposeGuitarAudio, playGuitarNote, stopGuitarNote } from "@/lib/guitar-audio";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Strumbly — Guitar Tuner" },
-      { name: "description", content: "A clean, beginner-friendly guitar tuner with a live dial and reference tones for popular tunings." },
+      { name: "description", content: "Tune your guitar with real-time microphone pitch detection, precise cents, and sampled acoustic guitar reference notes." },
       { property: "og:title", content: "Strumbly — Guitar Tuner" },
-      { property: "og:description", content: "Tune your guitar with a clean live dial and reference tones." },
+      { property: "og:description", content: "Real-time guitar pitch detection and sampled acoustic guitar notes for Standard, Drop D, and popular tunings." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Index,
-});
-
-const NAMES = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
-const note = (midi: number) => ({
-  name: NAMES[midi % 12]!,
-  freq: 440 * Math.pow(2, (midi - 69) / 12),
 });
 
 type Tuning = { id: string; name: string; free: boolean; notes: number[] };
@@ -52,107 +48,92 @@ const TUNING_EXAMPLES: Record<string, string> = {
   openc: "John Butler, Devin Townsend · Fingerstyle, progressive metal",
 };
 
-function autoCorrelate(buf: Float32Array, sr: number) {
-  let rms = 0;
-  for (const v of buf) rms += v * v;
-  if (Math.sqrt(rms / buf.length) < 0.01) return -1;
-  const n = buf.length;
-  const c = new Float32Array(n);
-  for (let i = 0; i < n; i++) for (let j = 0; j < n - i; j++) c[i]! += buf[j]! * buf[j + i]!;
-  let d = 0;
-  while (d < n - 1 && c[d]! > c[d + 1]!) d++;
-  let max = -1, pos = -1;
-  for (let i = d; i < n; i++) if (c[i]! > max) { max = c[i]!; pos = i; }
-  return pos > 0 ? sr / pos : -1;
-}
-
-let toneCtx: AudioContext | null = null;
-function playTone(freq: number) {
-  toneCtx ??= new AudioContext();
-  const ctx = toneCtx;
-  const now = ctx.currentTime;
-  const master = ctx.createGain();
-  master.gain.setValueAtTime(0.0001, now);
-  master.gain.exponentialRampToValueAtTime(0.35, now + 0.01);
-  master.gain.exponentialRampToValueAtTime(0.0001, now + 2.5);
-  master.connect(ctx.destination);
-  [1, 2, 3, 4].forEach((h, i) => {
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = i === 0 ? "triangle" : "sine";
-    o.frequency.value = freq * h;
-    g.gain.value = [1, 0.5, 0.25, 0.12][i]!;
-    o.connect(g).connect(master);
-    o.start(now);
-    o.stop(now + 2.6);
-  });
-}
-
 export function Index() {
-  const [tuning, setTuning] = useState(TUNINGS[0]!);
-  const strings = tuning.notes.map(note);
-  const stringsRef = useRef(strings);
-  stringsRef.current = strings;
+  const [tuning, setTuning] = useState<Tuning>(TUNINGS[0] ?? { id: "standard", name: "Standard", free: true, notes: [40, 45, 50, 55, 59, 64] });
+  const strings = tuning.notes.map(noteFromMidi);
+  const notesRef = useRef(tuning.notes);
+  notesRef.current = tuning.notes;
   const [active, setActive] = useState(false);
   const [cents, setCents] = useState(0);
   const [freq, setFreq] = useState<number | null>(null);
   const [targetIdx, setTargetIdx] = useState(0);
-  const [simulated, setSimulated] = useState(false);
+  const [nearestNote, setNearestNote] = useState("–");
+  const [micError, setMicError] = useState<string | null>(null);
+  const [audioError, setAudioError] = useState<string | null>(null);
+  const [loadingNote, setLoadingNote] = useState<number | null>(null);
   const [locked, setLocked] = useState<Tuning | null>(null);
   const [playing, setPlaying] = useState<number | null>(null);
   const stop = useRef<() => void>(() => {});
   const microphoneSession = useRef(0);
-  const target = strings[targetIdx]!;
+  const playbackSession = useRef(0);
+  const playbackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const target = strings[targetIdx] ?? strings[0];
 
-  useEffect(() => () => { microphoneSession.current++; stop.current(); }, []);
+  useEffect(() => () => {
+    microphoneSession.current++;
+    playbackSession.current++;
+    stop.current();
+    if (playbackTimer.current) clearTimeout(playbackTimer.current);
+    disposeGuitarAudio();
+  }, []);
 
   const update = (f: number) => {
-    const s = stringsRef.current;
-    let best = 0;
-    s.forEach((b, i) => { if (Math.abs(Math.log2(f / b.freq)) < Math.abs(Math.log2(f / s[best]!.freq))) best = i; });
-    const c = Math.max(-50, Math.min(50, 1200 * Math.log2(f / s[best]!.freq)));
-    setTargetIdx(best);
+    const result = describePitch(f, notesRef.current);
+    setTargetIdx(result.targetIndex);
+    setNearestNote(result.nearestNote);
     setFreq(f);
-    setCents((p) => p * 0.7 + c * 0.3);
-  };
-
-  const startSim = () => {
-    setSimulated(true);
-    let t = 0, idx = 0, drift = -40;
-    const id = setInterval(() => {
-      t++;
-      if (t % 60 === 0) { idx = (idx + 1) % 6; drift = (Math.random() - 0.5) * 90; }
-      drift *= 0.97;
-      const c = drift + (Math.random() - 0.5) * 3;
-      update(stringsRef.current[idx]!.freq * Math.pow(2, c / 1200));
-    }, 60);
-    stop.current = () => clearInterval(id);
+    setCents(result.cents);
   };
 
   const start = async () => {
     const session = ++microphoneSession.current;
+    playbackSession.current++;
+    stopGuitarNote();
     setPlaying(null);
+    setLoadingNote(null);
+    setAudioError(null);
+    setMicError(null);
     setActive(true);
+    let stream: MediaStream | null = null;
+    let ctx: AudioContext | null = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }, video: false });
       if (session !== microphoneSession.current) { stream.getTracks().forEach((track) => track.stop()); return; }
-      const ctx = new AudioContext();
+      ctx = new AudioContext();
+      const audioContext = ctx;
+      const microphone = stream;
       const an = ctx.createAnalyser();
-      an.fftSize = 2048;
-      ctx.createMediaStreamSource(stream).connect(an);
+      an.fftSize = 4096;
+      const source = ctx.createMediaStreamSource(stream);
+      source.connect(an);
       const buf = new Float32Array(an.fftSize);
+      const detectPitch = createPitchDetector(buf.length, ctx.sampleRate);
       let raf = 0;
-      const loop = () => {
-        an.getFloatTimeDomainData(buf);
-        const f = autoCorrelate(buf, ctx.sampleRate);
-        if (f > 50 && f < 1000) update(f);
+      let lastRead = -Infinity, lastPitch = performance.now();
+      const loop = (now: number) => {
+        if (session !== microphoneSession.current) return;
         raf = requestAnimationFrame(loop);
+        if (now - lastRead < 45) return;
+        lastRead = now;
+        an.getFloatTimeDomainData(buf);
+        const f = detectPitch(buf);
+        if (f !== null && f >= 50 && f <= 1000) { update(f); lastPitch = now; }
+        else if (now - lastPitch > 350) { setFreq(null); setCents(0); }
       };
-      loop();
-      setSimulated(false);
-      stop.current = () => { cancelAnimationFrame(raf); stream.getTracks().forEach((t) => t.stop()); ctx.close(); };
-    } catch {
-      if (session === microphoneSession.current) startSim();
+      stop.current = () => { cancelAnimationFrame(raf); microphone.getTracks().forEach((t) => t.stop()); source.disconnect(); an.disconnect(); void audioContext.close(); };
+      await ctx.resume();
+      if (session !== microphoneSession.current) return;
+      loop(performance.now());
+    } catch (error) {
+      stream?.getTracks().forEach((track) => track.stop());
+      if (ctx && ctx.state !== "closed") void ctx.close();
+      if (session === microphoneSession.current) {
+        stop.current();
+        stop.current = () => {};
+        setActive(false);
+        const denied = error instanceof DOMException && (error.name === "NotAllowedError" || error.name === "SecurityError");
+        setMicError(denied ? "Microphone access was denied. Allow access in your browser, then try again." : "Microphone unavailable. Check that a microphone is connected, then try again.");
+      }
     }
   };
 
@@ -161,7 +142,7 @@ export function Index() {
     stop.current();
     stop.current = () => {};
     setActive(false);
-    setSimulated(false);
+    setMicError(null);
     setFreq(null);
     setCents(0);
   };
@@ -173,23 +154,45 @@ export function Index() {
 
   const choose = (t: Tuning) => {
     if (!t.free) return setLocked(t);
+    playbackSession.current++;
+    stopGuitarNote();
+    setPlaying(null);
+    setLoadingNote(null);
     setTuning(t);
+    setTargetIdx(0);
     setFreq(null);
     setCents(0);
   };
 
-  const listen = (i: number) => {
+  const listen = async (i: number) => {
     stopMicrophone();
-    playTone(strings[i]!.freq);
-    setPlaying(i);
-    setTimeout(() => setPlaying((p) => (p === i ? null : p)), 1200);
+    const midi = tuning.notes[i];
+    if (midi === undefined) return;
+    const session = ++playbackSession.current;
+    const isCurrent = () => session === playbackSession.current;
+    stopGuitarNote();
+    if (playbackTimer.current) clearTimeout(playbackTimer.current);
+    setPlaying(null);
+    setLoadingNote(i);
+    setAudioError(null);
+    try {
+      const played = await playGuitarNote(midi, isCurrent);
+      if (!played || !isCurrent()) return;
+      setLoadingNote(null);
+      setPlaying(i);
+      playbackTimer.current = setTimeout(() => { if (isCurrent()) setPlaying(null); }, 3000);
+    } catch {
+      if (!isCurrent()) return;
+      setLoadingNote(null);
+      setAudioError("Guitar recording couldn't load. Check your connection and tap a note to retry.");
+    }
   };
 
   const status = !freq ? "idle" : Math.abs(cents) <= 5 ? "tune" : cents < 0 ? "low" : "high";
   const label = { idle: "Play a string", tune: "In Tune", low: "Too Low", high: "Too High" }[status];
   const color = { idle: "text-muted-foreground", tune: "text-success", low: "text-low", high: "text-high" }[status];
   const stroke = { idle: "var(--muted-foreground)", tune: "var(--success)", low: "var(--low)", high: "var(--high)" }[status];
-  const needleX = 200 + ((freq ? cents : 0) / 50) * 160;
+  const needleX = 200 + (Math.max(-50, Math.min(50, freq ? cents : 0)) / 50) * 160;
 
   return (
     <main className="mx-auto grid min-h-screen max-w-6xl gap-8 px-5 pb-10 pt-16 lg:grid-cols-[1fr_340px] lg:items-center lg:pt-10">
@@ -202,9 +205,9 @@ export function Index() {
 
         <div className="mt-5 grid w-full max-w-[328px] grid-cols-6 gap-2" role="group" aria-label="Reference notes">
           {strings.map((s, i) => (
-            <Button variant="ghost" key={i} onClick={() => listen(i)} aria-label={`Play string ${6 - i}: ${s.name}`} aria-pressed={playing === i}
+            <Button variant="ghost" key={i} onClick={() => void listen(i)} aria-label={`Play string ${6 - i}: ${s.name}`} aria-pressed={playing === i} aria-busy={loadingNote === i}
               className={`grid aspect-square h-auto w-full place-items-center rounded-full border p-0 font-sans text-base transition hover:border-primary hover:text-primary ${playing === i ? "scale-110 border-primary bg-accent font-bold text-primary" : "font-semibold text-foreground"}`}>
-              {s.name}
+              <span className={loadingNote === i ? "animate-pulse motion-reduce:animate-none" : ""}>{s.name}</span>
             </Button>
           ))}
         </div>
@@ -243,21 +246,29 @@ export function Index() {
             </g>
             {/* Note readout */}
             <text x="200" y="136" textAnchor="middle" fontSize="38" fontWeight="700" fill="var(--foreground)" className="font-display">
-              {freq ? target.name : "–"}
+              {freq ? nearestNote : "–"}
             </text>
             <text x="200" y="160" textAnchor="middle" fontSize="11" fill="var(--foreground)" fillOpacity="0.7">
-              {freq ? `${freq.toFixed(1)} Hz · ${cents > 0 ? "+" : ""}${cents.toFixed(0)}¢` : "—"}
+              {freq ? `${freq.toFixed(1)} Hz · ${cents >= 0 ? "+" : "−"}${Math.abs(cents).toFixed(1)}¢` : "—"}
             </text>
           </svg>
         </div>
 
-        <div aria-live="polite" className={`mt-4 h-8 font-display text-2xl font-bold ${color}`}>{freq ? label : ""}</div>
+        <div aria-live="polite" className="mt-4 min-h-14 text-center">
+          <div className={`font-display text-2xl font-bold ${color}`}>{freq ? label : ""}</div>
+          {freq && <p className="text-sm text-muted-foreground">Target: String {6 - targetIdx} · <span className="font-semibold text-foreground">{target?.name}</span></p>}
+        </div>
 
         <Button onClick={toggle}
           className={`mt-6 h-auto rounded-full px-8 py-3 font-display font-bold transition hover:scale-105 ${active ? "bg-muted text-foreground" : "bg-primary text-primary-foreground shadow-[0_0_40px_-8px_var(--primary)]"}`}>
           {active ? "Stop Microphone" : "Start Microphone"}
         </Button>
-        {simulated && active && <p className="mt-3 text-xs text-muted-foreground">Microphone unavailable — showing a simulation.</p>}
+        {micError && <p role="alert" className="mt-3 max-w-sm text-center text-sm text-high">{micError}</p>}
+        {audioError && <p role="alert" className="mt-3 max-w-sm text-center text-sm text-high">{audioError}</p>}
+        <p className="mt-5 text-center text-xs text-muted-foreground">
+          Guitar samples: <a className="underline underline-offset-2 hover:text-foreground" href="https://github.com/nbrosowsky/tonejs-instruments" target="_blank" rel="noreferrer">Nicholas Brosowsky / Iowa</a>
+          {" · "}<a className="underline underline-offset-2 hover:text-foreground" href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noreferrer">CC BY 3.0</a>
+        </p>
 
       </section>
 
