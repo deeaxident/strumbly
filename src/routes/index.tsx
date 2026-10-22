@@ -311,6 +311,27 @@ export function Index() {
         </p>
       </aside>
 
+      <section className="lg:col-span-2 mx-auto w-full max-w-3xl rounded-2xl border bg-card p-6">
+        <h2 className="text-xl font-bold">How to tune your guitar online</h2>
+        <div className="mt-4 space-y-4 text-sm text-muted-foreground">
+          <p>
+            Strumbly is a free online guitar tuner that listens through your device's microphone. Play one string at a time and the
+            needle shows exactly how many cents sharp or flat you are — no cables, no clip-on tuner, nothing to install.
+          </p>
+          <p>
+            Start with <strong className="text-foreground">Standard tuning (E A D G B E)</strong>, the tuning used for most songs. If you
+            don't have a good ear yet, tap any string button above the tuner to hear a real acoustic guitar play that exact note, then
+            match your string to it. When you're ready, tap <strong className="text-foreground">Start Microphone</strong>, pluck a string,
+            and turn its tuning peg slowly until the needle centers and the tuner turns green.
+          </p>
+          <p>
+            Beyond Standard, Strumbly includes the most popular alternate tunings — <strong className="text-foreground">Drop D, Half Step
+            Down, Full Step Down, Drop C, Drop B, DADGAD, Open G, Open D, Open E and Open C</strong> — each with the notes, famous
+            guitarists, and genres that use it, so you can explore new sounds with confidence.
+          </p>
+        </div>
+      </section>
+
     </main>
   );
 }
