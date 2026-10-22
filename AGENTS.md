@@ -13,7 +13,7 @@
 
 - Theme switching works by toggling a `.dark` class on `<html>`; every colour lives as a token in `src/styles.css` and components use semantic token classes only, so light and dark stay in sync without per-component branches.
 - Server-rendered SVG geometry must be rounded to a fixed number of decimals before it goes into JSX, because unrounded trig output differs in the last digits between runtimes and breaks hydration.
-- The tuning picker uses an accessible button-based menu so multi-line note and artist details render consistently across desktop and mobile native-select limitations.
+- The tuning picker uses an accessible button-based menu with outside pointerdown/focusin dismissal, not blur dismissal, so multi-line details render consistently and Safari null-relatedTarget blur cannot cancel item clicks.
 - Microphone sessions use a generation guard to discard pending permissions after stopping; reference playback stops capture before producing audio to prevent self-detection.
 - Load Tone.js dynamically in the browser-only guitar playback module; use licensed CDN sample pointers and dispose playback on unmount to keep SSR audio-free.
 - Keep pitch analysis in a pure, reusable normalized autocorrelation detector with bounded downsampled lag search; clamp only needle position, never reported cents.
