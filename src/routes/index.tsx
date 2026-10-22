@@ -10,9 +10,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Strumbly — Free Online Guitar Tuner with Microphone" },
-      { name: "description", content: "Tune your guitar online for free with Strumbly. Real-time microphone pitch detection shows exact cents off, plus real acoustic guitar reference notes for Standard, Drop D, DADGAD, Open G and more tunings." },
+      { name: "description", content: "Simple and easy online guitar tuner. Tune your guitar online for free with Strumbly — real-time microphone pitch detection and real acoustic guitar reference notes for Standard, Drop D, DADGAD and more." },
       { property: "og:title", content: "Strumbly — Free Online Guitar Tuner" },
-      { property: "og:description", content: "Free online guitar tuner with real-time microphone pitch detection and real acoustic guitar reference notes. Standard, Drop D, DADGAD, Open G and more." },
+      { property: "og:description", content: "Simple and easy online guitar tuner with real-time microphone pitch detection and real acoustic guitar reference notes. Standard, Drop D, DADGAD, Open G and more." },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://strumbly.io/" },
       { name: "twitter:card", content: "summary" },
