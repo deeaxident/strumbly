@@ -17,3 +17,4 @@
 - Microphone sessions use a generation guard to discard pending permissions after stopping; reference playback stops capture before producing audio to prevent self-detection.
 - Load Tone.js dynamically in the browser-only guitar playback module; use licensed CDN sample pointers and dispose playback on unmount to keep SSR audio-free.
 - Keep pitch analysis in a pure, reusable normalized autocorrelation detector with bounded downsampled lag search; clamp only needle position, never reported cents.
+- Song-to-tuning lookup runs server-side through a server function calling the AI gateway with a strict schema; results are validated (6 MIDI notes) and custom tunings are pinned at the top of the picker, so the client never sees the API key and the audio/mic code needs no changes.

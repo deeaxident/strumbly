@@ -72,7 +72,7 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
       <div className="flex gap-2">
         {searching ? (
           <form className="min-w-0 flex-1" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
-            <input ref={input} type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Type a song or artist..."
+            <input ref={input} type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Type a song or artist..."
               aria-label="Search a song to find its tuning" maxLength={120} enterKeyHint="search"
               onKeyDown={(e) => { if (e.key === "Escape") closeSearch(); }}
               className="h-12 w-full rounded-lg border border-input bg-card px-4 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring" />
@@ -105,7 +105,7 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
               className="w-full rounded-md px-3 py-3 text-left transition hover:bg-accent focus-visible:bg-accent focus-visible:outline-none">
               <span className="block font-semibold text-foreground">{result.song} <span className="font-normal text-muted-foreground">— {result.artist}</span></span>
               <span className="mt-1 flex flex-wrap items-baseline gap-x-3">
-                <span className="text-sm text-foreground">{result.tuningName}</span>
+                {result.tuningName.replace(/\s/g, "") !== noteText(result.notes).replace(/\s/g, "") && <span className="text-sm text-foreground">{result.tuningName}</span>}
                 <span className="font-sans font-semibold text-primary">{noteText(result.notes)}</span>
               </span>
             </button>
