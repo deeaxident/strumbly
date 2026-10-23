@@ -50,13 +50,18 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
     setOpen(false); setSearching(true);
     setTimeout(() => input.current?.focus(), 0);
   };
-  const submit = async () => {
-    const q = query.trim();
+  const cache = useRef(new Map<string, { result: SongResult | null; error: string | null }>());
+  const submit = async (raw = query) => {
+    const q = raw.trim();
     if (q.length < 2 || !onSearch) return;
+    const key = q.toLowerCase();
     const id = ++searchId.current;
+    const hit = cache.current.get(key);
+    if (hit) { setBusy(false); setResult(hit.result); setError(hit.error); return; }
     setBusy(true); setResult(null); setError(null);
     try {
       const r = await onSearch(q);
+      if (r.result) cache.current.set(key, r);
       if (id !== searchId.current) return;
       setResult(r.result); setError(r.error);
     } catch {
@@ -65,6 +70,12 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
       if (id === searchId.current) setBusy(false);
     }
   };
+  useEffect(() => {
+    if (!searching || query.trim().length < 3) return;
+    const t = setTimeout(() => { void submit(query); }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, searching]);
 
   return (
     <div ref={container} className="relative mt-5 w-full max-w-[560px]">
