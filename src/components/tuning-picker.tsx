@@ -4,44 +4,115 @@ import { Button } from "@/components/ui/button";
 
 type TuningOption = { id: string; name: string; notes: number[] };
 export type TuningExamples = Record<string, string>;
+export type SongResult = { song: string; artist: string; tuningName: string; presetId: string | null; notes: number[] };
 const names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+const noteText = (n: number[]) => n.map((midi) => names[midi % 12] ?? "").join(" ");
 
-export function TuningPicker({ tuning, tunings, examples, onChoose }: {
+export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, onSongPick }: {
   tuning: TuningOption; tunings: TuningOption[]; examples: TuningExamples;
   onChoose: (tuning: TuningOption) => void;
+  onSearch?: (query: string) => Promise<{ result: SongResult | null; error: string | null }>;
+  onSongPick?: (song: SongResult) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<SongResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const container = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
-  const notes = (t: TuningOption) => t.notes.map((midi) => names[midi % 12] ?? "").join(" ");
+  const input = useRef<HTMLInputElement>(null);
+  const searchId = useRef(0);
+  const notes = (t: TuningOption) => noteText(t.notes);
   useEffect(() => {
-    if (!open) return;
+    if (!open && !searching) return;
     // Safari may blur a clicked button with relatedTarget=null before click.
     // Close only on an actual outside interaction, not an ambiguous blur.
     const outside = (e: Event) => {
-      if (e.target instanceof Node && !container.current?.contains(e.target)) setOpen(false);
+      if (e.target instanceof Node && !container.current?.contains(e.target)) { setOpen(false); if (searching) closeSearch(); }
     };
     document.addEventListener("pointerdown", outside);
     document.addEventListener("focusin", outside);
-    container.current?.querySelector<HTMLButtonElement>('[role="menuitemradio"][aria-checked="true"]')?.focus();
+    if (open) container.current?.querySelector<HTMLButtonElement>('[role="menuitemradio"][aria-checked="true"]')?.focus();
     return () => {
       document.removeEventListener("pointerdown", outside);
       document.removeEventListener("focusin", outside);
     };
-  }, [open]);
+  }, [open, searching]);
+
+  const closeSearch = () => {
+    searchId.current++;
+    setSearching(false); setQuery(""); setResult(null); setError(null); setBusy(false);
+  };
+  const toggleSearch = () => {
+    if (searching) { closeSearch(); return; }
+    setOpen(false); setSearching(true);
+    setTimeout(() => input.current?.focus(), 0);
+  };
+  const submit = async () => {
+    const q = query.trim();
+    if (q.length < 2 || !onSearch) return;
+    const id = ++searchId.current;
+    setBusy(true); setResult(null); setError(null);
+    try {
+      const r = await onSearch(q);
+      if (id !== searchId.current) return;
+      setResult(r.result); setError(r.error);
+    } catch {
+      if (id === searchId.current) setError("Song search failed. Please try again in a moment.");
+    } finally {
+      if (id === searchId.current) setBusy(false);
+    }
+  };
 
   return (
     <div ref={container} className="relative mt-5 w-full max-w-[560px]">
       <div id="tuning-label" className="mb-1.5 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tuning</div>
-      <Button ref={trigger} type="button" variant="ghost" aria-labelledby="tuning-label tuning-current" aria-haspopup="menu" aria-expanded={open}
-        onClick={() => setOpen((current) => !current)} className="h-auto min-h-12 w-full justify-between gap-3 rounded-lg border border-input bg-card px-4 py-3 text-foreground">
-        <span id="tuning-current" className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-left">
-          <span className="text-base font-semibold">{tuning.name}</span>
-          <span className="font-sans text-base font-semibold text-primary">{notes(tuning)}</span>
-        </span>
-        <ChevronDown aria-hidden className="shrink-0" />
-      </Button>
-      {open && (
+      <div className="flex gap-2">
+        {searching ? (
+          <form className="min-w-0 flex-1" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
+            <input ref={input} type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Type a song or artist..."
+              aria-label="Search a song to find its tuning" maxLength={120} enterKeyHint="search"
+              onKeyDown={(e) => { if (e.key === "Escape") closeSearch(); }}
+              className="h-12 w-full rounded-lg border border-input bg-card px-4 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring" />
+          </form>
+        ) : (
+          <Button ref={trigger} type="button" variant="ghost" aria-labelledby="tuning-label tuning-current" aria-haspopup="menu" aria-expanded={open}
+            onClick={() => setOpen((current) => !current)} className="h-auto min-h-12 min-w-0 flex-1 justify-between gap-3 rounded-lg border border-input bg-card px-4 py-3 text-foreground">
+            <span id="tuning-current" className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-left">
+              <span className="text-base font-semibold">{tuning.id.startsWith("song-") ? "🎵 " : ""}{tuning.name}</span>
+              <span className="font-sans text-base font-semibold text-primary">{notes(tuning)}</span>
+            </span>
+            <ChevronDown aria-hidden className="shrink-0" />
+          </Button>
+        )}
+        {onSearch && (
+          <Button type="button" variant="ghost" onClick={toggleSearch} aria-label={searching ? "Close song search" : "Find tuning by song"} title={searching ? "Close search" : "Find tuning by song"}
+            className="h-12 w-12 shrink-0 self-start rounded-lg border border-input bg-card p-0 text-foreground hover:text-primary">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5">
+              {searching ? <path d="M6 6l12 12M18 6L6 18" /> : <><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></>}
+            </svg>
+          </Button>
+        )}
+      </div>
+      {searching && (busy || result || error) && (
+        <div className="absolute inset-x-0 top-full z-30 mt-2 rounded-lg border border-border bg-card p-1 shadow-[var(--shadow-soft)]" aria-live="polite">
+          {busy && <p className="animate-pulse px-3 py-3 text-sm text-muted-foreground motion-reduce:animate-none">Finding the tuning…</p>}
+          {error && !busy && <p className="px-3 py-3 text-sm text-muted-foreground">{error}</p>}
+          {result && !busy && (
+            <button type="button" onClick={() => { onSongPick?.(result); closeSearch(); }}
+              className="w-full rounded-md px-3 py-3 text-left transition hover:bg-accent focus-visible:bg-accent focus-visible:outline-none">
+              <span className="block font-semibold text-foreground">{result.song} <span className="font-normal text-muted-foreground">— {result.artist}</span></span>
+              <span className="mt-1 flex flex-wrap items-baseline gap-x-3">
+                <span className="text-sm text-foreground">{result.tuningName}</span>
+                <span className="font-sans font-semibold text-primary">{noteText(result.notes)}</span>
+              </span>
+            </button>
+          )}
+        </div>
+      )}
+      {open && !searching && (
         <div role="menu" aria-labelledby="tuning-label" className="absolute inset-x-0 top-full z-30 mt-2 max-h-[min(420px,55vh)] overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-[var(--shadow-soft)]"
           onKeyDown={(e) => {
             if (e.key === "Escape") { setOpen(false); trigger.current?.focus(); }
@@ -59,7 +130,7 @@ export function TuningPicker({ tuning, tunings, examples, onChoose }: {
               className="h-auto w-full justify-start whitespace-normal rounded-md px-3 py-3 text-left text-foreground focus:bg-accent">
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <span className="font-semibold">{option.name}</span>
+                  <span className="font-semibold">{option.id.startsWith("song-") ? "🎵 " : ""}{option.name}</span>
                   <span className="font-sans font-semibold text-primary">{notes(option)}</span>
                 </span>
                 <span className="mt-1 block text-xs font-normal leading-relaxed text-muted-foreground">{examples[option.id]}</span>

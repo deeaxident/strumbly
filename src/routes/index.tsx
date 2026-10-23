@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { TuningPicker } from "@/components/tuning-picker";
+import { TuningPicker, type SongResult } from "@/components/tuning-picker";
+import { useServerFn } from "@tanstack/react-start";
+import { findSongTuning } from "@/lib/song-tuning.functions";
 import { createPitchDetector, describePitch, noteFromMidi } from "@/lib/pitch";
 import { disposeGuitarAudio, playGuitarNote, preloadGuitarAudio, stopGuitarNote } from "@/lib/guitar-audio";
 
@@ -72,6 +74,9 @@ const TUNING_EXAMPLES: Record<string, string> = {
 
 export function Index() {
   const [tuning, setTuning] = useState<Tuning>(TUNINGS[0] ?? { id: "standard", name: "Standard", notes: [40, 45, 50, 55, 59, 64] });
+  const [songTuning, setSongTuning] = useState<Tuning | null>(null);
+  const [songExample, setSongExample] = useState("");
+  const searchSong = useServerFn(findSongTuning);
   const strings = tuning.notes.map(noteFromMidi);
   const notesRef = useRef(tuning.notes);
   notesRef.current = tuning.notes;
@@ -195,6 +200,17 @@ export function Index() {
     setCents(0);
   };
 
+  const pickSong = (s: SongResult) => {
+    const preset = s.presetId ? TUNINGS.find((t) => t.id === s.presetId) : undefined;
+    const matched = preset ?? TUNINGS.find((t) => t.notes.every((n, i) => n === s.notes[i]));
+    setSongExample(`${s.song} — ${s.artist}`);
+    if (matched) { setSongTuning(null); choose(matched); return; }
+    const custom = { id: `song-${s.notes.join("-")}`, name: `${s.song} — ${s.artist}`, notes: s.notes };
+    setSongTuning(custom);
+    choose(custom);
+  };
+
+
   const listen = async (i: number) => {
     stopMicrophone();
     const midi = tuning.notes[i];
@@ -233,7 +249,9 @@ export function Index() {
           <span className="mt-1 block font-sans text-sm font-medium tracking-normal text-muted-foreground">Free Online Guitar Tuner</span>
         </h1>
 
-        <TuningPicker tuning={tuning} tunings={TUNINGS} examples={TUNING_EXAMPLES} onChoose={choose} />
+        <TuningPicker tuning={tuning} tunings={songTuning ? [songTuning, ...TUNINGS] : TUNINGS}
+          examples={songTuning ? { ...TUNING_EXAMPLES, [songTuning.id]: songExample } : TUNING_EXAMPLES}
+          onChoose={choose} onSearch={(query) => searchSong({ data: { query } })} onSongPick={pickSong} />
 
         <div className="mt-5 grid w-full max-w-[328px] grid-cols-6 gap-2" role="group" aria-label="Reference notes">
           {strings.map((s, i) => (
