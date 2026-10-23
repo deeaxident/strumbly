@@ -91,9 +91,9 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
         ) : (
           <Button ref={trigger} type="button" variant="ghost" aria-labelledby="tuning-label tuning-current" aria-haspopup="menu" aria-expanded={open}
             onClick={() => setOpen((current) => !current)} className="h-auto min-h-12 min-w-0 flex-1 justify-between gap-3 rounded-lg border border-input bg-card px-4 py-3 text-foreground">
-            <span id="tuning-current" className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-left">
-              <span className="text-base font-semibold">{tuning.name}</span>
-              <span className="font-sans text-base font-semibold text-primary">{notes(tuning)}</span>
+            <span id="tuning-current" className="flex min-w-0 flex-nowrap items-center gap-2 whitespace-nowrap text-left sm:gap-3">
+              <span className="truncate text-sm font-semibold sm:text-base">{tuning.name}</span>
+              <span className="shrink-0 font-sans text-sm font-semibold tracking-tight text-primary sm:text-base sm:tracking-normal">{notes(tuning)}</span>
             </span>
             <ChevronDown aria-hidden className="shrink-0" />
           </Button>
