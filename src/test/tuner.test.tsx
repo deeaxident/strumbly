@@ -109,3 +109,13 @@ it("shows the reference notes as rounded rectangles, not circles", () => {
     expect(note.className).not.toContain("rounded-full");
   }
 });
+it("shifts every string up by the chosen capo fret", () => {
+  render(<Index />);
+  fireEvent.click(screen.getByRole("button", { name: /^Capo/ }));
+  fireEvent.click(screen.getByRole("menuitemradio", { name: "Capo 2" }));
+  const names = screen.getAllByRole("button", { name: /^Play string/ }).map((b) => b.getAttribute("aria-label"));
+  expect(names).toEqual([
+    "Play string 6: F♯", "Play string 5: B", "Play string 4: E",
+    "Play string 3: A", "Play string 2: C♯", "Play string 1: F♯",
+  ]);
+});
