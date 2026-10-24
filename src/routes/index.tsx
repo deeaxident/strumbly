@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { TuningPicker, type SongResult } from "@/components/tuning-picker";
 import { useServerFn } from "@tanstack/react-start";
 import { findSongTuning } from "@/lib/song-tuning.functions";
-import { createPitchDetector, describePitch, noteFromMidi } from "@/lib/pitch";
+import { correctOctave, createPitchDetector, describePitch, noteFromMidi } from "@/lib/pitch";
 import { disposeGuitarAudio, playGuitarNote, preloadGuitarAudio, stopGuitarNote } from "@/lib/guitar-audio";
 
 export const Route = createFileRoute("/")({
