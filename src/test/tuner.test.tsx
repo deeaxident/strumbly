@@ -20,6 +20,7 @@ function mockAudio() {
     currentTime = 0; sampleRate = 44100; destination = {};
     createAnalyser = () => ({ fftSize: 4096, getFloatTimeDomainData: raw, getFloatFrequencyData: bins, disconnect: vi.fn() });
     createMediaStreamSource = () => ({ connect: vi.fn(), disconnect: vi.fn() });
+    createBiquadFilter = () => ({ type: "", frequency: { value: 0 }, Q: { value: 0 }, connect: vi.fn(), disconnect: vi.fn() });
     createGain = gain;
     createOscillator = () => ({ frequency: { value: 0 }, connect: () => ({ connect: vi.fn() }), start: vi.fn(), stop: vi.fn() });
     close = vi.fn();
