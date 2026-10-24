@@ -11,15 +11,16 @@ const schema = z.object({
   tuningName: z.string(),
   presetId: z.enum(PRESET_IDS).nullable(),
   notes: z.array(z.number().int()),
+  capo: z.number().int(),
 });
 
-export type SongTuning = { song: string; artist: string; tuningName: string; presetId: string | null; notes: number[] };
+export type SongTuning = { song: string; artist: string; tuningName: string; presetId: string | null; notes: number[]; capo: number };
 
 const INSTRUCTIONS = `You identify the guitar tuning a song is played in.
 Return the most widely accepted tuning for the main guitar part of the song the user names.
 notes: exactly 6 MIDI note numbers for open strings, lowest (6th string) to highest (1st), e.g. Standard = [40,45,50,55,59,64].
 presetId: one of standard (E A D G B E), dropd, halfdown (Eb), fulldown (D standard), dropc, dropb, dadgad, openg, opend, opene, openc — only if the tuning exactly equals it, else null.
-If the song is unknown or ambiguous with no reasonable guess, set found=false.`;
+capo: the fret the capo sits on for the main guitar part (e.g. Wonderwall = 2), 0 if none. notes are the open-string tuning without the capo.\nIf the song is unknown or ambiguous with no reasonable guess, set found=false.`;
 
 export async function lookupSongTuning(query: string, apiKey: string): Promise<SongTuning | null> {
   const provider = createOpenAI({
@@ -38,5 +39,5 @@ export async function lookupSongTuning(query: string, apiKey: string): Promise<S
   });
   const out = await result.output;
   if (!out.found || out.notes.length !== 6 || out.notes.some((n) => n < 28 || n > 72)) return null;
-  return { song: out.song, artist: out.artist, tuningName: out.tuningName, presetId: out.presetId, notes: out.notes };
+  return { song: out.song, artist: out.artist, tuningName: out.tuningName, presetId: out.presetId, notes: out.notes, capo: out.capo >= 1 && out.capo <= 12 ? out.capo : 0 };
 }
