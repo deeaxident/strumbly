@@ -142,7 +142,12 @@ export function Index() {
       const an = ctx.createAnalyser();
       an.fftSize = 4096;
       const source = ctx.createMediaStreamSource(stream);
-      source.connect(an);
+      // Band-pass pre-filter: strip rumble/mains hum below and pick/fret noise above the guitar range.
+      const highpass = ctx.createBiquadFilter();
+      highpass.type = "highpass"; highpass.frequency.value = 60; highpass.Q.value = 0.7;
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = "lowpass"; lowpass.frequency.value = 1200; lowpass.Q.value = 0.7;
+      source.connect(highpass); highpass.connect(lowpass); lowpass.connect(an);
       const buf = new Float32Array(an.fftSize);
       const detectPitch = createPitchDetector(buf.length, ctx.sampleRate);
       let raf = 0;
