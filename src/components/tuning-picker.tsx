@@ -105,9 +105,9 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
           </form>
         ) : (
           <Button ref={trigger} type="button" variant="ghost" aria-labelledby="tuning-label tuning-current" aria-haspopup="menu" aria-expanded={open}
-            onClick={() => { setCapoOpen(false); setOpen((current) => !current); }} className="h-auto min-h-12 min-w-0 flex-1 justify-between gap-3 rounded-lg border border-input bg-card px-4 py-3 text-foreground">
-            <span id="tuning-current" className="min-w-0 truncate whitespace-nowrap text-left text-base font-semibold sm:text-lg">{tuning.name}</span>
-            <ChevronDown aria-hidden className="shrink-0" />
+            onClick={() => { setCapoOpen(false); setOpen((current) => !current); }} className="relative h-12 min-w-0 flex-1 justify-center rounded-lg border border-input bg-card px-10 py-0 text-foreground">
+            <span id="tuning-current" className="min-w-0 truncate whitespace-nowrap text-center text-base font-semibold leading-none sm:text-lg">{tuning.name}</span>
+            <ChevronDown aria-hidden className="absolute right-4 top-1/2 -translate-y-1/2 shrink-0" />
           </Button>
         )}
       </div>
