@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { TuningPicker, type SongResult } from "@/components/tuning-picker";
 import { useServerFn } from "@tanstack/react-start";
 import { findSongTuning } from "@/lib/song-tuning.functions";
-import { createPitchDetector, describePitch, noteFromMidi } from "@/lib/pitch";
+import { correctOctave, createPitchDetector, describePitch, noteFromMidi } from "@/lib/pitch";
 import { disposeGuitarAudio, playGuitarNote, preloadGuitarAudio, stopGuitarNote } from "@/lib/guitar-audio";
 
 export const Route = createFileRoute("/")({
@@ -142,7 +142,12 @@ export function Index() {
       const an = ctx.createAnalyser();
       an.fftSize = 4096;
       const source = ctx.createMediaStreamSource(stream);
-      source.connect(an);
+      // Band-pass pre-filter: strip rumble/mains hum below and pick/fret noise above the guitar range.
+      const highpass = ctx.createBiquadFilter();
+      highpass.type = "highpass"; highpass.frequency.value = 60; highpass.Q.value = 0.7;
+      const lowpass = ctx.createBiquadFilter();
+      lowpass.type = "lowpass"; lowpass.frequency.value = 1200; lowpass.Q.value = 0.7;
+      source.connect(highpass); highpass.connect(lowpass); lowpass.connect(an);
       const buf = new Float32Array(an.fftSize);
       const detectPitch = createPitchDetector(buf.length, ctx.sampleRate);
       let raf = 0;
@@ -153,11 +158,12 @@ export function Index() {
         if (now - lastRead < 45) return;
         lastRead = now;
         an.getFloatTimeDomainData(buf);
-        const f = detectPitch(buf);
+        const raw = detectPitch(buf);
+        const f = raw === null ? null : correctOctave(raw, notesRef.current);
         if (f !== null && f >= 50 && f <= 1000) { update(f); lastPitch = now; }
         else if (now - lastPitch > 1800) { setFreq(null); setCents(0); }
       };
-      stop.current = () => { cancelAnimationFrame(raf); microphone.getTracks().forEach((t) => t.stop()); source.disconnect(); an.disconnect(); void audioContext.close(); };
+      stop.current = () => { cancelAnimationFrame(raf); microphone.getTracks().forEach((t) => t.stop()); source.disconnect(); highpass.disconnect(); lowpass.disconnect(); an.disconnect(); void audioContext.close(); };
       await ctx.resume();
       if (session !== microphoneSession.current) return;
       loop(performance.now());

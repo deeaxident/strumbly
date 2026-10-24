@@ -16,6 +16,19 @@ export function describePitch(frequency: number, targets: number[]) {
   return { nearestNote: noteFromMidi(Math.round(midi)).name, targetIndex, cents: (midi - targetMidi) * 100 };
 }
 
+/** Octave correction: weak mics often lose a low string's fundamental and only catch its
+ * 2nd (or 4th) harmonic. If the reading is far from every string but sits ~an octave or two
+ * above one, report the lower octave instead. */
+export function correctOctave(frequency: number, targets: number[]) {
+  const midi = 69 + 12 * Math.log2(frequency / 440);
+  const nearest = (m: number) => Math.min(...targets.map((t) => Math.abs(m - t)));
+  if (nearest(midi) <= 1.5) return frequency;
+  for (const octaves of [1, 2]) {
+    if (nearest(midi - 12 * octaves) <= 0.5) return frequency / 2 ** octaves;
+  }
+  return frequency;
+}
+
 /** Normalized autocorrelation on a downsampled signal, with sub-sample peak interpolation.
  * Reuses working buffers; bounds lag search to the guitar's useful pitch range. */
 export function createPitchDetector(bufferSize: number, sampleRate: number) {

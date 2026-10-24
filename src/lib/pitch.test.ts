@@ -41,3 +41,10 @@ it("targets the low D string in Drop D and preserves negative cents", () => {
   expect(result.nearestNote).toBe("D");
   expect(result.cents).toBeCloseTo(-23);
 });
+it("folds a low E heard only as its 2nd harmonic back down to the low E string", async () => {
+  const { correctOctave } = await import("./pitch");
+  const standard = [40, 45, 50, 55, 59, 64];
+  expect(correctOctave(noteFromMidi(52).freq, standard)).toBeCloseTo(noteFromMidi(40).freq);
+  expect(correctOctave(noteFromMidi(64).freq, standard)).toBeCloseTo(noteFromMidi(64).freq);
+  expect(correctOctave(noteFromMidi(41).freq, standard)).toBeCloseTo(noteFromMidi(41).freq);
+});
