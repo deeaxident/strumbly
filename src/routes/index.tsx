@@ -47,8 +47,8 @@ type Tuning = { id: string; name: string; notes: number[] };
 const TUNINGS: Tuning[] = [
   { id: "standard", name: "Standard", notes: [40, 45, 50, 55, 59, 64] },
   { id: "dropd", name: "Drop D", notes: [38, 45, 50, 55, 59, 64] },
-  { id: "halfdown", name: "Half Step Down", notes: [39, 44, 49, 54, 58, 63] },
-  { id: "fulldown", name: "Full Step Down", notes: [38, 43, 48, 53, 57, 62] },
+  { id: "halfdown", name: "1/2 Step Down", notes: [39, 44, 49, 54, 58, 63] },
+  { id: "fulldown", name: "1 Step Down", notes: [38, 43, 48, 53, 57, 62] },
   { id: "dropc", name: "Drop C", notes: [36, 43, 48, 53, 57, 62] },
   { id: "dropb", name: "Drop B", notes: [35, 42, 47, 52, 56, 61] },
   { id: "dadgad", name: "DADGAD", notes: [38, 45, 50, 55, 57, 62] },
@@ -77,9 +77,11 @@ export function Index() {
   const [songTuning, setSongTuning] = useState<Tuning | null>(null);
   const [songExample, setSongExample] = useState("");
   const searchSong = useServerFn(findSongTuning);
-  const strings = tuning.notes.map(noteFromMidi);
-  const notesRef = useRef(tuning.notes);
-  notesRef.current = tuning.notes;
+  const [capo, setCapo] = useState(0);
+  const sounding = tuning.notes.map((n) => n + capo);
+  const strings = sounding.map(noteFromMidi);
+  const notesRef = useRef(sounding);
+  notesRef.current = sounding;
   const [active, setActive] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [cents, setCents] = useState(0);
@@ -206,10 +208,21 @@ export function Index() {
     setCents(0);
   };
 
+  const changeCapo = (n: number) => {
+    playbackSession.current++;
+    stopGuitarNote();
+    setPlaying(null);
+    setLoadingNote(null);
+    setCapo(n);
+    setFreq(null);
+    setCents(0);
+  };
+
   const pickSong = (s: SongResult) => {
     const preset = s.presetId ? TUNINGS.find((t) => t.id === s.presetId) : undefined;
     const matched = preset ?? TUNINGS.find((t) => t.notes.every((n, i) => n === s.notes[i]));
     setSongExample(`${s.song} — ${s.artist}`);
+    changeCapo(s.capo ?? 0);
     if (matched) { setSongTuning(null); choose(matched); return; }
     const custom = { id: `song-${s.notes.join("-")}`, name: `${s.song} — ${s.artist}`, notes: s.notes };
     setSongTuning(custom);
@@ -219,7 +232,7 @@ export function Index() {
 
   const listen = async (i: number) => {
     stopMicrophone();
-    const midi = tuning.notes[i];
+    const midi = sounding[i];
     if (midi === undefined) return;
     const session = ++playbackSession.current;
     const isCurrent = () => session === playbackSession.current;
@@ -257,7 +270,7 @@ export function Index() {
 
         <TuningPicker tuning={tuning} tunings={songTuning ? [songTuning, ...TUNINGS] : TUNINGS}
           examples={songTuning ? { ...TUNING_EXAMPLES, [songTuning.id]: songExample } : TUNING_EXAMPLES}
-          onChoose={choose} onSearch={(query) => searchSong({ data: { query } })} onSongPick={pickSong} />
+          onChoose={choose} onSearch={(query) => searchSong({ data: { query } })} onSongPick={pickSong} capo={capo} onCapo={changeCapo} />
 
         <div className="mt-5 grid w-full max-w-[328px] grid-cols-6 gap-2" role="group" aria-label="Reference notes">
           {strings.map((s, i) => (

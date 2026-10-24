@@ -4,16 +4,19 @@ import { Button } from "@/components/ui/button";
 
 type TuningOption = { id: string; name: string; notes: number[] };
 export type TuningExamples = Record<string, string>;
-export type SongResult = { song: string; artist: string; tuningName: string; presetId: string | null; notes: number[] };
+export type SongResult = { song: string; artist: string; tuningName: string; presetId: string | null; notes: number[]; capo?: number };
 const names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
 const noteText = (n: number[]) => n.map((midi) => names[midi % 12] ?? "").join(" ");
 
-export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, onSongPick }: {
+export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, onSongPick, capo = 0, onCapo }: {
   tuning: TuningOption; tunings: TuningOption[]; examples: TuningExamples;
   onChoose: (tuning: TuningOption) => void;
   onSearch?: (query: string) => Promise<{ result: SongResult | null; error: string | null }>;
   onSongPick?: (song: SongResult) => void;
+  capo?: number; onCapo?: (capo: number) => void;
 }) {
+  const [capoOpen, setCapoOpen] = useState(false);
+  const capoTrigger = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState("");
@@ -26,20 +29,20 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
   const searchId = useRef(0);
   const notes = (t: TuningOption) => noteText(t.notes);
   useEffect(() => {
-    if (!open && !searching) return;
+    if (!open && !searching && !capoOpen) return;
     // Safari may blur a clicked button with relatedTarget=null before click.
     // Close only on an actual outside interaction, not an ambiguous blur.
     const outside = (e: Event) => {
-      if (e.target instanceof Node && !container.current?.contains(e.target)) { setOpen(false); if (searching) closeSearch(); }
+      if (e.target instanceof Node && !container.current?.contains(e.target)) { setOpen(false); setCapoOpen(false); if (searching) closeSearch(); }
     };
     document.addEventListener("pointerdown", outside);
     document.addEventListener("focusin", outside);
-    if (open) container.current?.querySelector<HTMLButtonElement>('[role="menuitemradio"][aria-checked="true"]')?.focus();
+    if (open || capoOpen) container.current?.querySelector<HTMLButtonElement>('[role="menuitemradio"][aria-checked="true"]')?.focus();
     return () => {
       document.removeEventListener("pointerdown", outside);
       document.removeEventListener("focusin", outside);
     };
-  }, [open, searching]);
+  }, [open, searching, capoOpen]);
 
   const closeSearch = () => {
     searchId.current++;
@@ -47,7 +50,7 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
   };
   const toggleSearch = () => {
     if (searching) { closeSearch(); return; }
-    setOpen(false); setSearching(true);
+    setOpen(false); setCapoOpen(false); setSearching(true);
     setTimeout(() => input.current?.focus(), 0);
   };
   const cache = useRef(new Map<string, { result: SongResult | null; error: string | null }>());
@@ -79,8 +82,20 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
 
   return (
     <div ref={container} className="relative mt-5 w-full max-w-[560px]">
+      <div className="flex items-end gap-2">
+        {onCapo && (
+          <div className="shrink-0">
+            <div id="capo-label" className="mb-1.5 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Capo</div>
+            <Button ref={capoTrigger} type="button" variant="ghost" aria-labelledby="capo-label capo-current" aria-haspopup="menu" aria-expanded={capoOpen}
+              onClick={() => { setOpen(false); if (searching) closeSearch(); setCapoOpen((c) => !c); }}
+              className="h-12 w-12 rounded-lg border border-input bg-card p-0 font-sans text-lg">
+              <span id="capo-current" className={capo ? "font-bold text-primary" : "font-semibold text-muted-foreground"}>{capo ? capo : "—"}</span>
+            </Button>
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
       <div id="tuning-label" className="mb-1.5 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tuning</div>
-      <div className="flex gap-2">
+      <div className="flex">
         {searching ? (
           <form className="min-w-0 flex-1" onSubmit={(e) => { e.preventDefault(); void submit(); }}>
             <input ref={input} type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Type a song or artist..."
@@ -90,7 +105,7 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
           </form>
         ) : (
           <Button ref={trigger} type="button" variant="ghost" aria-labelledby="tuning-label tuning-current" aria-haspopup="menu" aria-expanded={open}
-            onClick={() => setOpen((current) => !current)} className="h-auto min-h-12 min-w-0 flex-1 justify-between gap-3 rounded-lg border border-input bg-card px-4 py-3 text-foreground">
+            onClick={() => { setCapoOpen(false); setOpen((current) => !current); }} className="h-auto min-h-12 min-w-0 flex-1 justify-between gap-3 rounded-lg border border-input bg-card px-4 py-3 text-foreground">
             <span id="tuning-current" className="flex min-w-0 flex-nowrap items-center gap-2 whitespace-nowrap text-left sm:gap-3">
               <span className="truncate text-sm font-semibold sm:text-base">{tuning.name}</span>
               <span className="shrink-0 font-sans text-sm font-semibold tracking-tight text-primary sm:text-base sm:tracking-normal">{notes(tuning)}</span>
@@ -98,9 +113,11 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
             <ChevronDown aria-hidden className="shrink-0" />
           </Button>
         )}
+      </div>
+        </div>
         {onSearch && (
           <Button type="button" variant="ghost" onClick={toggleSearch} aria-label={searching ? "Close song search" : "Find tuning by song"} title={searching ? "Close search" : "Find tuning by song"}
-            className="h-12 w-12 shrink-0 self-start rounded-lg border border-input bg-card p-0 text-foreground hover:text-primary">
+            className="h-12 w-12 shrink-0 rounded-lg border border-input bg-card p-0 text-foreground hover:text-primary">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-5 w-5">
               {searching ? <path d="M6 6l12 12M18 6L6 18" /> : <><circle cx="11" cy="11" r="6.5" /><path d="M16 16l4.5 4.5" /></>}
             </svg>
@@ -118,9 +135,30 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
               <span className="mt-1 flex flex-wrap items-baseline gap-x-3">
                 {result.tuningName.replace(/\s/g, "") !== noteText(result.notes).replace(/\s/g, "") && <span className="text-sm text-foreground">{result.tuningName}</span>}
                 <span className="font-sans font-semibold text-primary">{noteText(result.notes)}</span>
+                {!!result.capo && <span className="text-sm text-muted-foreground">Capo {result.capo}</span>}
               </span>
             </button>
           )}
+        </div>
+      )}
+      {capoOpen && onCapo && (
+        <div role="menu" aria-labelledby="capo-label" className="absolute left-0 top-full z-30 mt-2 max-h-[min(420px,55vh)] w-20 overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-[var(--shadow-soft)]"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") { setCapoOpen(false); capoTrigger.current?.focus(); }
+            if (["ArrowDown", "ArrowUp"].includes(e.key)) {
+              e.preventDefault();
+              const items = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitemradio"]'));
+              const index = items.findIndex((item) => item === document.activeElement);
+              items[(index + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length]?.focus();
+            }
+          }}>
+          {Array.from({ length: 13 }, (_, n) => (
+            <Button key={n} type="button" variant="ghost" role="menuitemradio" aria-checked={n === capo} aria-label={n ? `Capo ${n}` : "No capo"}
+              onClick={() => { setCapoOpen(false); capoTrigger.current?.focus(); onCapo(n); }}
+              className={`h-10 w-full rounded-md font-sans font-semibold focus:bg-accent ${n ? "text-primary" : "text-muted-foreground"} ${n === capo ? "bg-accent" : ""}`}>
+              {n || "—"}
+            </Button>
+          ))}
         </div>
       )}
       {open && !searching && (
