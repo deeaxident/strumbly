@@ -101,15 +101,12 @@ export function TuningPicker({ tuning, tunings, examples, onChoose, onSearch, on
             <input ref={input} type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Type a song or artist..."
               aria-label="Search a song to find its tuning" maxLength={120} enterKeyHint="search"
               onKeyDown={(e) => { if (e.key === "Escape") closeSearch(); }}
-              className="h-12 w-full rounded-lg border border-input bg-card px-4 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring" />
+              className="h-12 w-full rounded-lg border border-input bg-card px-4 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring sm:text-lg" />
           </form>
         ) : (
           <Button ref={trigger} type="button" variant="ghost" aria-labelledby="tuning-label tuning-current" aria-haspopup="menu" aria-expanded={open}
             onClick={() => { setCapoOpen(false); setOpen((current) => !current); }} className="h-auto min-h-12 min-w-0 flex-1 justify-between gap-3 rounded-lg border border-input bg-card px-4 py-3 text-foreground">
-            <span id="tuning-current" className="flex min-w-0 flex-nowrap items-center gap-2 whitespace-nowrap text-left sm:gap-3">
-              <span className="truncate text-sm font-semibold sm:text-base">{tuning.name}</span>
-              <span className="shrink-0 font-sans text-sm font-semibold tracking-tight text-primary sm:text-base sm:tracking-normal">{notes(tuning)}</span>
-            </span>
+            <span id="tuning-current" className="min-w-0 truncate whitespace-nowrap text-left text-base font-semibold sm:text-lg">{tuning.name}</span>
             <ChevronDown aria-hidden className="shrink-0" />
           </Button>
         )}
