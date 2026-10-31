@@ -47,8 +47,8 @@ type Tuning = { id: string; name: string; notes: number[] };
 const TUNINGS: Tuning[] = [
   { id: "standard", name: "Standard", notes: [40, 45, 50, 55, 59, 64] },
   { id: "dropd", name: "Drop D", notes: [38, 45, 50, 55, 59, 64] },
-  { id: "halfdown", name: "1/2 Step Down", notes: [39, 44, 49, 54, 58, 63] },
-  { id: "fulldown", name: "1 Step Down", notes: [38, 43, 48, 53, 57, 62] },
+  { id: "halfdown", name: "Half Step Down", notes: [39, 44, 49, 54, 58, 63] },
+  { id: "fulldown", name: "Full Step Down", notes: [38, 43, 48, 53, 57, 62] },
   { id: "dropc", name: "Drop C", notes: [36, 43, 48, 53, 57, 62] },
   { id: "dropb", name: "Drop B", notes: [35, 42, 47, 52, 56, 61] },
   { id: "dadgad", name: "DADGAD", notes: [38, 45, 50, 55, 57, 62] },
@@ -286,8 +286,7 @@ export function Index() {
         <div className="relative mt-8 w-full max-w-[560px]">
           <svg viewBox="0 0 400 170" className="h-auto w-full">
             {/* Panel */}
-            <rect x="1.5" y="1.5" width="397" height="167" rx="18" fill="var(--card)" stroke="var(--border)" strokeWidth="1" />
-            <rect x="1.5" y="1.5" width="397" height="167" rx="18" fill="none" stroke={stroke} strokeOpacity={status === "tune" ? 0.6 : 0.15} strokeWidth="2.5" style={{ transition: "all .3s" }} />
+            <rect x="1.5" y="1.5" width="397" height="167" rx="18" fill="var(--card)" stroke="var(--input)" strokeWidth="1" vectorEffect="non-scaling-stroke" />
             {/* Dial window */}
             <rect x="24" y="20" width="352" height="62" rx="9" fill="var(--muted)" fillOpacity="0.45" />
             {/* Scale ticks */}
