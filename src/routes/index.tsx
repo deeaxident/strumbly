@@ -338,7 +338,7 @@ export function Index() {
 
       </section>
 
-      <section className="mx-auto w-full max-w-[560px] rounded-2xl border bg-card">
+      <section className="mx-auto w-full max-w-[560px] rounded-2xl border border-input bg-card">
         <h2 className="text-base font-bold sm:text-xl">
           <button type="button" aria-expanded={helpOpen} aria-controls="tuning-guide" onClick={() => setHelpOpen((v) => !v)}
             className="flex w-full items-center justify-between gap-3 whitespace-nowrap px-4 py-5 text-left transition-colors hover:text-primary sm:px-6">
